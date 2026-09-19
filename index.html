@@ -88,6 +88,7 @@
 
         .hands {
             display: flex;
+            flex-wrap: wrap;
             gap: 16px;
             margin-top: 6px;
         }
@@ -96,7 +97,8 @@
             border: 1px solid rgba(255, 255, 255, 0.25);
             border-radius: 12px;
             padding: 12px;
-            min-width: 280px;
+            flex: 1 1 220px;
+            min-width: 220px;
             transition: all 0.15s ease;
         }
 
@@ -139,27 +141,6 @@
         <strong>You:</strong>
 
         <div id="playerHandsUI" class="hands">
-
-            <!-- Hand 1 -->
-            <div id="handPanel0" class="hand-panel">
-                <div class="hand-header">
-                    <span>Hand 1</span>
-                    <span id="handBet0" class="hand-bet"></span>
-                </div>
-                <div id="playerCards0" class="cards hand"></div>
-                <div id="playerTotal0"></div>
-            </div>
-
-            <!-- Hand 2 (hidden unless split) -->
-            <div id="handPanel1" class="hand-panel" style="display:none;">
-                <div class="hand-header">
-                    <span>Hand 2</span>
-                    <span id="handBet1" class="hand-bet"></span>
-                </div>
-                <div id="playerCards1" class="cards hand"></div>
-                <div id="playerTotal1"></div>
-            </div>
-
         </div>
     </div>
 
@@ -171,6 +152,7 @@
         <button id="surrenderBtn" disabled>Surrender</button>
         <button id="doubleBtn" disabled>Double</button>
         <button id="splitBtn" disabled>Split</button>
+        <button id="insuranceBtn" disabled>Insurance</button>
 
         <label style="margin-left: 20px;">
             Decks:

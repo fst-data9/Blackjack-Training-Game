@@ -1,6 +1,8 @@
-// ----- Card / Deck helpers -----pushchange
+// ----- Card / Deck helpers -----
 const SUITS = ["♠", "♥", "♦", "♣"];
 const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const MAX_HANDS = 4;
+const DEALER_HITS_SOFT_17 = false;
 const bankrollAmtEl = document.getElementById("bankrollAmt");
 const betInputEl = document.getElementById("betInput");
 const sessionId = crypto.randomUUID();
@@ -48,6 +50,9 @@ function cardValueForSplit(card) {
     if (["K", "Q", "J"].includes(card.rank)) return 10;
     return Number(card.rank);                         // "2".."10"
 }
+function isTenValue(card) {
+    return card && (card.rank === "10" || ["K", "Q", "J"].includes(card.rank));
+}
 function handValue(hand) {
     // Count Aces as 11 initially, then reduce to 1 as needed
     let total = 0;
@@ -69,6 +74,39 @@ function handValue(hand) {
         aces -= 1;
     }
     return total;
+}
+function isSoftHand(hand) {
+    let total = 0;
+    let aces = 0;
+
+    for (const c of hand) {
+        if (c.rank === "A") {
+            total += 11;
+            aces += 1;
+        } else if (isTenValue(c)) {
+            total += 10;
+        } else {
+            total += Number(c.rank);
+        }
+    }
+
+    while (total > 21 && aces > 0) {
+        total -= 10;
+        aces -= 1;
+    }
+
+    return aces > 0;
+}
+function isBlackjack(hand) {
+    return (
+        hand.length === 2 &&
+        !hand._fromSplit &&
+        hand.some((card) => card.rank === "A") &&
+        hand.some(isTenValue)
+    );
+}
+function dealerHasBlackjack() {
+    return isBlackjack(dealerHand);
 }
 
 // Betting helpers
@@ -101,29 +139,13 @@ let bets = null;
 let handOutcomes = null; // null when not split; otherwise like ["", ""] or [null, null]
 let didDouble = false;
 let didSplit = false;
+let awaitingInsurance = false;
+let insuranceBet = 0;
 
 // ----- UI elements -----
 const dealerCardsEl = document.getElementById("dealerCards");
 const dealerTotalEl = document.getElementById("dealerTotal");
-const handPanelEls = [
-    document.getElementById("handPanel0"),
-    document.getElementById("handPanel1"),
-];
-
-const playerCardsEls = [
-    document.getElementById("playerCards0"),
-    document.getElementById("playerCards1"),
-];
-
-const playerTotalEls = [
-    document.getElementById("playerTotal0"),
-    document.getElementById("playerTotal1"),
-];
-
-const handBetEls = [
-    document.getElementById("handBet0"),
-    document.getElementById("handBet1"),
-];
+const playerHandsUIEl = document.getElementById("playerHandsUI");
 const statusEl = document.getElementById("status");
 
 const newGameBtn = document.getElementById("newGameBtn");
@@ -133,6 +155,7 @@ const surrenderBtn = document.getElementById("surrenderBtn");
 const deckCountSelect = document.getElementById("deckCountSelect");
 const doubleBtn = document.getElementById("doubleBtn");
 const splitBtn = document.getElementById("splitBtn");
+const insuranceBtn = document.getElementById("insuranceBtn");
 
 function suitCode(suit) {
     // match your suit symbols to filename letters
@@ -176,30 +199,44 @@ function renderHand(containerEl, hand, { hideSecondCard = false } = {}) {
         imgs[idx].alt = hidden ? "Hidden card" : `${card.rank}${card.suit}`;
     });
 }
+function makeHandPanel(index, hand, bet, isActive) {
+    const panel = document.createElement("div");
+    panel.className = "hand-panel";
+    panel.classList.toggle("active", isActive);
+    panel.classList.toggle("inactive", playerHands && !isActive);
+
+    const header = document.createElement("div");
+    header.className = "hand-header";
+
+    const title = document.createElement("span");
+    title.textContent = `Hand ${index + 1}`;
+
+    const wager = document.createElement("span");
+    wager.className = "hand-bet";
+    wager.textContent = bet > 0 ? `Bet: $${bet}` : "";
+
+    const cards = document.createElement("div");
+    cards.className = "cards hand";
+
+    const total = document.createElement("div");
+    const suffix = hand._splitAcesLocked ? " (split ace)" : "";
+    total.textContent = `Total: ${handValue(hand)}${suffix}`;
+
+    header.append(title, wager);
+    panel.append(header, cards, total);
+    renderHand(cards, hand);
+
+    return panel;
+}
 function renderPlayerHandsUI() {
     const hands = playerHands ? playerHands : [playerHand];
+    playerHandsUIEl.innerHTML = "";
 
-    for (let i = 0; i < 2; i++) {
-        const panel = handPanelEls[i];
-
-        // hide Hand 2 unless split
-        if (!hands[i]) {
-            panel.style.display = "none";
-            continue;
-        }
-
-        panel.style.display = "";
-
+    hands.forEach((hand, i) => {
         const isActive = playerHands ? i === activeHandIndex : true;
-        panel.classList.toggle("active", isActive);
-        panel.classList.toggle("inactive", playerHands && !isActive);
-
         const bet = playerHands ? bets[i] : currentBet;
-        handBetEls[i].textContent = bet > 0 ? `Bet: $${bet}` : "";
-
-        renderHand(playerCardsEls[i], hands[i]);
-        playerTotalEls[i].textContent = `Total: ${handValue(hands[i])}`;
-    }
+        playerHandsUIEl.appendChild(makeHandPanel(i, hand, bet, isActive));
+    });
 }
 function render({ hideDealerHoleCard = false } = {}) {
     // dealer
@@ -225,44 +262,48 @@ function render({ hideDealerHoleCard = false } = {}) {
         (hand && hand._done) ||
         (playerHands && handOutcomes && handOutcomes[activeHandIndex] === "surrender");
 
-    hitBtn.disabled = !inRound || handFinished;
-    standBtn.disabled = !inRound || handFinished;
+    const actionBlocked = !inRound || awaitingInsurance || handFinished || hand._splitAcesLocked;
 
-    // surrender: first decision only, and usually not after split if you want that rule
-    surrenderBtn.disabled = !inRound || handFinished || hand.length !== 2;
+    hitBtn.disabled = actionBlocked;
+    standBtn.disabled = actionBlocked;
+
+    // Late surrender: initial two-card hand only, before split or any other player action.
+    surrenderBtn.disabled = actionBlocked || !!playerHands || hand.length !== 2;
 
     // double: first decision only + must afford to match current hand bet
-    doubleBtn.disabled = !inRound || handFinished || hand.length !== 2 || bankroll < handBet;
+    doubleBtn.disabled = actionBlocked || hand.length !== 2 || bankroll < handBet;
 
     const canSplit =
-        inRound &&
+        !actionBlocked &&
         hand.length === 2 &&
         cardValueForSplit(hand[0]) === cardValueForSplit(hand[1]) &&
-        bankroll >= handBet;
+        bankroll >= handBet &&
+        (!playerHands || playerHands.length < MAX_HANDS);
 
     splitBtn.disabled = !canSplit;
+    insuranceBtn.disabled = !awaitingInsurance || insuranceAmount() <= 0 || bankroll < insuranceAmount();
 }
 
 // helper functions to send hand data to postgres
-async function recordHandToDb({ outcome, message }) {
+async function recordHandToDb({ outcome, hand = playerHand, handIndex = 0, bet = currentBet }) {
     try {
-        const betCents = Math.round(currentBet * 100);
+        const betCents = Math.round(bet * 100);
 
         const payload = {
             sessionId,
             roundIndex,
-            handIndex: 0,
+            handIndex,
 
             betCents,
             outcome,
             payoutCents: calcPayoutCents(outcome, betCents),
 
-            playerCards: playerHand.map(cardToString),
+            playerCards: hand.map(cardToString),
             dealerCards: dealerHand.map(cardToString),
             dealerUpcard: dealerHand[0] ? cardToString(dealerHand[0]) : null,
 
             didSplit: !!didSplit,
-            didDouble: !!didDouble,
+            didDouble: !!hand._doubled,
             didSurrender: outcome === "surrender"
         };
 
@@ -320,6 +361,62 @@ function calcPayoutCents(outcome, bet) {
 
 //
 
+function insuranceAmount() {
+    return Math.floor(currentBet / 2);
+}
+
+function resolveOpeningDeal({ takeInsurance = false } = {}) {
+    let insuranceMessage = "";
+
+    if (awaitingInsurance && takeInsurance) {
+        const wager = insuranceAmount();
+        if (wager <= 0 || bankroll < wager) {
+            setStatus("Not enough bankroll for insurance.");
+            return true;
+        }
+
+        insuranceBet = wager;
+        bankroll -= insuranceBet;
+        updateBankrollUI();
+        insuranceMessage = ` Insurance bet: $${insuranceBet}.`;
+    }
+
+    awaitingInsurance = false;
+
+    if (dealerHasBlackjack()) {
+        if (insuranceBet > 0) {
+            bankroll += insuranceBet * 3;
+            updateBankrollUI();
+            insuranceMessage += " Insurance wins.";
+        }
+
+        if (isBlackjack(playerHand)) {
+            endRound(`Push: both have Blackjack.${insuranceMessage}`, "push");
+        } else {
+            endRound(`Dealer wins: Blackjack.${insuranceMessage}`, "lose");
+        }
+        return true;
+    }
+
+    if (insuranceBet > 0) {
+        insuranceMessage += " Insurance loses.";
+        updateBankrollUI();
+    }
+
+    if (isBlackjack(playerHand)) {
+        endRound(`You win: Blackjack!${insuranceMessage}`, "blackjack");
+        return true;
+    }
+
+    render({ hideDealerHoleCard: true });
+    setStatus(`${insuranceMessage} Your turn: Hit or Stand.`);
+    return false;
+}
+
+function resolvePendingInsuranceBeforeAction() {
+    return awaitingInsurance && resolveOpeningDeal({ takeInsurance: false });
+}
+
 function endRound(message, outcome = "lose") {
     inRound = false;
     render({ hideDealerHoleCard: false });
@@ -353,19 +450,24 @@ function endRound(message, outcome = "lose") {
 }
 
 function checkImmediateOutcomes() {
-    const p = handValue(playerHand);
-    const d = handValue(dealerHand);
+    const dealerUpcard = dealerHand[0];
 
-    // Natural blackjack checks (simple rules)
-    if (playerHand.length === 2 && p === 21) {
-        if (dealerHand.length === 2 && d === 21) endRound("Push: both have Blackjack.", "push");
-        else endRound("You win: Blackjack!", "blackjack");
+    if (dealerUpcard && dealerUpcard.rank === "A") {
+        awaitingInsurance = true;
+        render({ hideDealerHoleCard: true });
+        setStatus("Dealer shows Ace. Take insurance or choose an action to decline.");
         return true;
     }
-    if (dealerHand.length === 2 && d === 21) {
-        endRound("Dealer wins: Blackjack.", "lose");
+
+    if (dealerUpcard && isTenValue(dealerUpcard)) {
+        return resolveOpeningDeal({ takeInsurance: false });
+    }
+
+    if (isBlackjack(playerHand)) {
+        endRound("You win: Blackjack!", "blackjack");
         return true;
     }
+
     return false;
 }
 function drawCard(hand) {
@@ -386,6 +488,11 @@ function drawCard(hand) {
 }
 // ----- Actions -----
 function startNewGame() {
+    if (inRound) {
+        setStatus("Finish the current round before starting a new one.");
+        return;
+    }
+
     // add round counter
     roundIndex += 1;
     // ✅ If previous round was a split, clear it only when starting a new round
@@ -417,6 +524,10 @@ function startNewGame() {
     currentBet = bet;
     bankroll -= currentBet;
     updateBankrollUI();
+    didDouble = false;
+    didSplit = false;
+    awaitingInsurance = false;
+    insuranceBet = 0;
 
     // prevent changing bet mid-hand
     betInputEl.disabled = true;
@@ -445,11 +556,12 @@ function startNewGame() {
 
 function hit() {
     if (!inRound) return;
+    if (resolvePendingInsuranceBeforeAction()) return;
 
     const hand = currentHand();
 
     // If this hand is already finished, ignore input
-    if (hand && hand._done) return;
+    if (hand && (hand._done || hand._splitAcesLocked)) return;
 
     drawCard(hand);
     render({ hideDealerHoleCard: true });
@@ -481,13 +593,17 @@ function hit() {
 
 
 function dealerPlay() {
-    while (handValue(dealerHand) < 17) {
+    while (
+        handValue(dealerHand) < 17 ||
+        (DEALER_HITS_SOFT_17 && handValue(dealerHand) === 17 && isSoftHand(dealerHand))
+    ) {
         drawCard(dealerHand);
     }
 }
 
 function stand() {
     if (!inRound) return;
+    if (resolvePendingInsuranceBeforeAction()) return;
 
     const hand = currentHand();
 
@@ -520,8 +636,14 @@ function stand() {
 
 function double() {
     if (!inRound) return;
+    if (resolvePendingInsuranceBeforeAction()) return;
 
     const hand = currentHand();
+
+    if (hand._splitAcesLocked) {
+        setStatus("Split aces receive one card only.");
+        return;
+    }
 
     if (hand.length !== 2) {
         setStatus("Double is only allowed before hitting.");
@@ -538,6 +660,7 @@ function double() {
 
     bankroll -= betToDouble;
     didDouble = true;
+    hand._doubled = true;
     if (playerHands) {
         bets[i] *= 2;
     } else {
@@ -577,14 +700,24 @@ function double() {
 
 function split() {
     if (!inRound) return;
+    if (resolvePendingInsuranceBeforeAction()) return;
 
-    if (playerHand.length !== 2) {
+    const hand = currentHand();
+    const i = activeHandIndex;
+    const handBet = playerHands ? bets[i] : currentBet;
+
+    if (hand.length !== 2) {
         setStatus("Split is only allowed with two cards.");
         return;
     }
 
-    const v0 = cardValueForSplit(playerHand[0]);
-    const v1 = cardValueForSplit(playerHand[1]);
+    if (playerHands && playerHands.length >= MAX_HANDS) {
+        setStatus(`You can split to a maximum of ${MAX_HANDS} hands.`);
+        return;
+    }
+
+    const v0 = cardValueForSplit(hand[0]);
+    const v1 = cardValueForSplit(hand[1]);
 
     if (v0 !== v1) {
         setStatus("Split is only allowed with matching value (e.g., Q+K, 10+J) or a pair.");
@@ -592,35 +725,54 @@ function split() {
     }
 
     // Need enough bankroll to place the additional bet (same as currentBet)
-    if (bankroll < currentBet) {
+    if (bankroll < handBet) {
         setStatus("Not enough bankroll to split.");
         return;
     }
 
     // Take the extra bet (DO NOT double currentBet)
-    bankroll -= currentBet;
+    bankroll -= handBet;
     updateBankrollUI();
     didSplit = true;
-    // Split into 2 hands
-    const secondCard = playerHand.pop();
-    const firstHand = [playerHand[0]];
-    const secondHand = [secondCard];
+    const splitAces = hand[0].rank === "A" && hand[1].rank === "A";
 
-    // Save both hands + per-hand bets
-    playerHands = [firstHand, secondHand];
-    bets = [currentBet, currentBet];
-    activeHandIndex = 0;
-    handOutcomes = [null, null];
+    const secondCard = hand.pop();
+    const secondHand = [secondCard];
+    hand._fromSplit = true;
+    secondHand._fromSplit = true;
+
+    if (!playerHands) {
+        playerHands = [hand];
+        bets = [currentBet];
+        handOutcomes = [null];
+        activeHandIndex = 0;
+    }
+
+    playerHands.splice(i + 1, 0, secondHand);
+    bets.splice(i + 1, 0, handBet);
+    handOutcomes.splice(i + 1, 0, null);
 
     // Deal one card to each hand (common rule)
-    drawCard(playerHands[0]);
-    drawCard(playerHands[1]);
+    drawCard(hand);
+    drawCard(secondHand);
+
+    if (splitAces) {
+        hand._splitAcesLocked = true;
+        secondHand._splitAcesLocked = true;
+        hand._done = true;
+        secondHand._done = true;
+    }
 
     // Keep compatibility with your hit/stand which uses playerHand
-    playerHand = playerHands[0];
+    playerHand = playerHands[activeHandIndex];
 
     render({ hideDealerHoleCard: true });
-    setStatus("Split! Playing Hand 1. Hit or Stand?");
+    if (splitAces) {
+        setStatus("Split aces receive one card each.");
+        advanceHandOrResolve();
+    } else {
+        setStatus(`Split! Playing Hand ${activeHandIndex + 1}. Hit or Stand?`);
+    }
 }
 
 function advanceHandOrResolve() {
@@ -695,6 +847,7 @@ function settleSplitHands() {
 
         bankroll += payoutForOutcome(bet, outcome);
         summary.push(`Hand ${i + 1}: ${outcome.toUpperCase()} (${p} vs ${d})`);
+        recordHandToDb({ outcome, hand, handIndex: i, bet });
 
         // mark done for UI/buttons
         hand._done = true;
@@ -715,6 +868,7 @@ function settleSplitHands() {
 
 function surrender() {
     if (!inRound) return;
+    if (resolvePendingInsuranceBeforeAction()) return;
 
     const hand = currentHand();
 
@@ -723,24 +877,21 @@ function surrender() {
         return;
     }
 
+    if (playerHands) {
+        setStatus("Surrender is not available after splitting.");
+        return;
+    }
+
     // Non-split: your existing payout logic
     if (!playerHands) {
         endRound("You surrendered. Half your bet is returned.", "surrender");
         return;
     }
+}
 
-    // Split: surrender only this hand
-    const i = activeHandIndex;
-
-    handOutcomes[i] = "surrender";
-    hand._done = true;
-    hand._result = "surrender";
-
-    bankroll += Math.floor(bets[i] / 2);
-    updateBankrollUI();
-
-    setStatus(`Hand ${i + 1} surrendered.`);
-    advanceHandOrResolve();
+function takeInsurance() {
+    if (!awaitingInsurance) return;
+    resolveOpeningDeal({ takeInsurance: true });
 }
 
 // ----- Wire up buttons -----
@@ -750,6 +901,7 @@ standBtn.addEventListener("click", stand);
 surrenderBtn.addEventListener("click", surrender);
 doubleBtn.addEventListener("click", double);
 splitBtn.addEventListener("click", split);
+insuranceBtn.addEventListener("click", takeInsurance);
 
 // Initial render
 updateBankrollUI();
