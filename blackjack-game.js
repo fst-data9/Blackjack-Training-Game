@@ -4,7 +4,7 @@ const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 const bankrollAmtEl = document.getElementById("bankrollAmt");
 const betInputEl = document.getElementById("betInput");
 const sessionId = crypto.randomUUID();
-window.API_BASE = "http://host.docker.internal:3001";
+window.API_BASE = window.API_BASE || "http://localhost:3001";
 
 function createDeck() {
     const deck = [];

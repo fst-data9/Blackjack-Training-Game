@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: docker.io/library/postgres:16
     container_name: blackjack-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -10,6 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - blackjack_pgdata:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
 
   api:
     build: ./backend
