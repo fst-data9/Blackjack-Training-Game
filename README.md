@@ -60,6 +60,8 @@ The browser talks to the API at `http://localhost:3001`.
 
 The SQL files in `database/init/` run automatically when Podman creates a new Postgres data volume. If `blackjack_pgdata` already exists, Podman will keep the current database as-is.
 
+For local `file://` play, `backend/.env.example` enables `ALLOW_FILE_ORIGIN=true`. Before deploying publicly, set `ALLOW_FILE_ORIGIN=false` and set `ALLOWED_ORIGINS` to the deployed frontend origin only.
+
 ## Useful Commands
 
 ```sh
