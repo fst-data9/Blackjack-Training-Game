@@ -156,6 +156,7 @@ const deckCountSelect = document.getElementById("deckCountSelect");
 const doubleBtn = document.getElementById("doubleBtn");
 const splitBtn = document.getElementById("splitBtn");
 const insuranceBtn = document.getElementById("insuranceBtn");
+const noInsuranceBtn = document.getElementById("noInsuranceBtn");
 
 function suitCode(suit) {
     // match your suit symbols to filename letters
@@ -263,7 +264,10 @@ function render({ hideDealerHoleCard = false } = {}) {
         (playerHands && handOutcomes && handOutcomes[activeHandIndex] === "surrender");
 
     const actionBlocked = !inRound || awaitingInsurance || handFinished || hand._splitAcesLocked;
+    const insuranceWager = insuranceAmount();
 
+    newGameBtn.disabled = inRound;
+    newGameBtn.textContent = inRound ? "Round Active" : "Deal";
     hitBtn.disabled = actionBlocked;
     standBtn.disabled = actionBlocked;
 
@@ -281,7 +285,10 @@ function render({ hideDealerHoleCard = false } = {}) {
         (!playerHands || playerHands.length < MAX_HANDS);
 
     splitBtn.disabled = !canSplit;
-    insuranceBtn.disabled = !awaitingInsurance || insuranceAmount() <= 0 || bankroll < insuranceAmount();
+    insuranceBtn.textContent = insuranceWager > 0 ? `Insurance $${insuranceWager}` : "Insurance";
+    insuranceBtn.disabled = !awaitingInsurance || insuranceWager <= 0 || bankroll < insuranceWager;
+    noInsuranceBtn.disabled = !awaitingInsurance;
+    deckCountSelect.disabled = inRound;
 }
 
 // helper functions to send hand data to postgres
@@ -413,31 +420,26 @@ function resolveOpeningDeal({ takeInsurance = false } = {}) {
     return false;
 }
 
-function resolvePendingInsuranceBeforeAction() {
-    return awaitingInsurance && resolveOpeningDeal({ takeInsurance: false });
-}
-
 function endRound(message, outcome = "lose") {
     inRound = false;
-    render({ hideDealerHoleCard: false });
+    const endingBet = currentBet;
     // record hand to DB
-    recordHandToDb({ outcome, message });
+    recordHandToDb({ outcome, hand: playerHand, handIndex: 0, bet: endingBet });
     // Payout rules:
     // - lose: you already paid the bet, nothing returned
     // - push: return bet
     // - win: return bet + winnings (1:1)
     // - blackjack: return bet + winnings (3:2)
     // - surrender: return half the bet (rounded down)
-    if (currentBet > 0) {
+    if (endingBet > 0) {
         if (outcome === "push") {
-            bankroll += currentBet;
+            bankroll += endingBet;
         } else if (outcome === "win") {
-            bankroll += currentBet * 2;
+            bankroll += endingBet * 2;
         } else if (outcome === "blackjack") {
-            bankroll += currentBet * 2 + Math.floor(currentBet / 2);
-            // Alternative clearer: bankroll += currentBet * 2 + Math.floor(currentBet / 2);
+            bankroll += endingBet * 2 + Math.floor(endingBet / 2);
         } else if (outcome === "surrender") {
-            bankroll += Math.floor(currentBet / 2);
+            bankroll += Math.floor(endingBet / 2);
         }
     }
 
@@ -446,6 +448,7 @@ function endRound(message, outcome = "lose") {
 
     betInputEl.disabled = false;
 
+    render({ hideDealerHoleCard: false });
     setStatus(message);
 }
 
@@ -455,7 +458,7 @@ function checkImmediateOutcomes() {
     if (dealerUpcard && dealerUpcard.rank === "A") {
         awaitingInsurance = true;
         render({ hideDealerHoleCard: true });
-        setStatus("Dealer shows Ace. Take insurance or choose an action to decline.");
+        setStatus("Dealer shows Ace. Choose Insurance or No Insurance.");
         return true;
     }
 
@@ -556,7 +559,7 @@ function startNewGame() {
 
 function hit() {
     if (!inRound) return;
-    if (resolvePendingInsuranceBeforeAction()) return;
+    if (awaitingInsurance) return;
 
     const hand = currentHand();
 
@@ -603,7 +606,7 @@ function dealerPlay() {
 
 function stand() {
     if (!inRound) return;
-    if (resolvePendingInsuranceBeforeAction()) return;
+    if (awaitingInsurance) return;
 
     const hand = currentHand();
 
@@ -636,7 +639,7 @@ function stand() {
 
 function double() {
     if (!inRound) return;
-    if (resolvePendingInsuranceBeforeAction()) return;
+    if (awaitingInsurance) return;
 
     const hand = currentHand();
 
@@ -700,7 +703,7 @@ function double() {
 
 function split() {
     if (!inRound) return;
-    if (resolvePendingInsuranceBeforeAction()) return;
+    if (awaitingInsurance) return;
 
     const hand = currentHand();
     const i = activeHandIndex;
@@ -868,7 +871,7 @@ function settleSplitHands() {
 
 function surrender() {
     if (!inRound) return;
-    if (resolvePendingInsuranceBeforeAction()) return;
+    if (awaitingInsurance) return;
 
     const hand = currentHand();
 
@@ -894,6 +897,11 @@ function takeInsurance() {
     resolveOpeningDeal({ takeInsurance: true });
 }
 
+function declineInsurance() {
+    if (!awaitingInsurance) return;
+    resolveOpeningDeal({ takeInsurance: false });
+}
+
 // ----- Wire up buttons -----
 newGameBtn.addEventListener("click", startNewGame);
 hitBtn.addEventListener("click", hit);
@@ -902,6 +910,7 @@ surrenderBtn.addEventListener("click", surrender);
 doubleBtn.addEventListener("click", double);
 splitBtn.addEventListener("click", split);
 insuranceBtn.addEventListener("click", takeInsurance);
+noInsuranceBtn.addEventListener("click", declineInsurance);
 
 // Initial render
 updateBankrollUI();
