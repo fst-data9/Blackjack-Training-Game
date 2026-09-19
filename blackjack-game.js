@@ -4,6 +4,7 @@ const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 const bankrollAmtEl = document.getElementById("bankrollAmt");
 const betInputEl = document.getElementById("betInput");
 const sessionId = crypto.randomUUID();
+window.API_BASE = window.API_BASE || "http://localhost:3001";
 
 function createDeck() {
     const deck = [];
@@ -244,59 +245,77 @@ function render({ hideDealerHoleCard = false } = {}) {
 
 // helper functions to send hand data to postgres
 async function recordHandToDb({ outcome, message }) {
-  try {
-    
-    const betCents = Math.round(currentBet * 100);
+    try {
+        const betCents = Math.round(currentBet * 100);
 
-    const payload = {
-        sessionId,
-        roundIndex,
-        handIndex: 0,
+        const payload = {
+            sessionId,
+            roundIndex,
+            handIndex: 0,
 
-        betCents: betCents,
-        outcome,
-        payoutCents: calcPayoutCents(outcome, betCents),
+            betCents,
+            outcome,
+            payoutCents: calcPayoutCents(outcome, betCents),
 
-        playerCards: playerHand.map(cardToString),
-        dealerCards: dealerHand.map(cardToString),
-        dealerUpcard: dealerHand[0] ? cardToString(dealerHand[0]) : null,
+            playerCards: playerHand.map(cardToString),
+            dealerCards: dealerHand.map(cardToString),
+            dealerUpcard: dealerHand[0] ? cardToString(dealerHand[0]) : null,
 
-        didSplit: didSplit ? true : false,
-        didDouble: didDouble ? true : false,
-        didSurrender: outcome === "surrender" ? true : false,
-    };
+            didSplit: !!didSplit,
+            didDouble: !!didDouble,
+            didSurrender: outcome === "surrender"
+        };
 
-    const res = await fetch("http://localhost:3001/api/hands", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+        const API_BASE = window.API_BASE || "http://localhost:3001";
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error("Failed to record hand:", res.status, text);
+        window.__BJ_DB_PENDING__ ||= [];
+
+        // ✅ create the promise first
+        const p = fetch(`${API_BASE}/api/hands`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(async (res) => {
+            if (!res.ok) {
+                const text = await res.text().catch(() => "");
+                console.error("Failed to record hand:", res.status, text);
+            }
+            return res;
+        });
+
+        // ✅ track it
+        window.__BJ_DB_PENDING__.push(p);
+
+        // ✅ cleanup
+        p.finally(() => {
+            const i = window.__BJ_DB_PENDING__.indexOf(p);
+            if (i >= 0) window.__BJ_DB_PENDING__.splice(i, 1);
+        });
+
+        // ✅ await it so single-hand runs still behave
+        await p;
+    } catch (err) {
+        console.error("Failed to record hand:", err);
     }
-  } catch (err) {
-    console.error("Failed to record hand:", err);
-  }
 }
+
 let roundIndex = 0; // increment each new round
 
 function calcPayoutCents(outcome, bet) {
-  // This should match your bankroll logic, but expressed as net payout for the DB.
-  // Convention (recommended):
-  //  - win: +bet
-  //  - lose: -bet
-  //  - push: 0
-  //  - blackjack: +1.5*bet
-  //  - surrender: -0.5*bet
-  if (bet <= 0) return 0;
+    // This should match your bankroll logic, but expressed as net payout for the DB.
+    // Convention (recommended):
+    //  - win: +bet
+    //  - lose: -bet
+    //  - push: 0
+    //  - blackjack: +1.5*bet
+    //  - surrender: -0.5*bet
+    if (bet <= 0) return 0;
 
-  if (outcome === "push") return 0;
-  if (outcome === "win") return bet;
-  if (outcome === "blackjack") return bet + Math.floor(bet / 2);
-  if (outcome === "surrender") return -Math.floor(bet / 2);
-  return -bet; // lose default
+    if (outcome === "push") return 0;
+    if (outcome === "win") return bet;
+    if (outcome === "blackjack") return bet + Math.floor(bet / 2);
+    if (outcome === "surrender") return -Math.floor(bet / 2);
+    return -bet; // lose default
 }
 
 //
@@ -438,7 +457,7 @@ function hit() {
     const p = handValue(hand);
 
     if (p > 21) {
-        // 
+        //
         if (!playerHands) {
             endRound("You bust. Dealer wins.", "lose");
             return;
@@ -739,13 +758,12 @@ render({ hideDealerHoleCard: false });
 // starting a session
 async function startSession() {
   try {
-    await fetch("http://localhost:3001/api/sessions", {
+    const API_BASE = window.API_BASE || "http://localhost:3001";
+
+    await fetch(`${API_BASE}/api/sessions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId,
-        userAgent: navigator.userAgent
-      })
+      body: JSON.stringify({ sessionId, userAgent: navigator.userAgent })
     });
   } catch (e) {
     console.error("Failed to start session:", e);
@@ -753,7 +771,58 @@ async function startSession() {
 }
 
 startSession();
-// playing cards thanks to 
+// playing cards thanks to
 /* Vectorized Playing Cards 1.3- http://code.google.com/p/vectorized-playing-cards/
 Copyright 2011 - Chris Aguilar
 Licensed under LGPL 3 - www.gnu.org/copyleft/lesser.html */
+
+/* API TESTING only - DO NOT USE IN PRODUCTION */
+(function () {
+    const isLocal =
+        location.hostname === "localhost" ||
+        location.hostname === "127.0.0.1" ||
+        location.protocol === "file:";
+
+    if (!isLocal) return;
+
+    window.__BJ_FAST__ = false;
+
+    window.__BJ_TEST__ = {
+        fastMode(on = true) {
+            window.__BJ_FAST__ = !!on;
+        },
+        flushDb: async () => {
+            const pending = window.__BJ_DB_PENDING__ || [];
+            await Promise.allSettled([...pending]);
+        },
+
+        start(bet = 1) {
+            betInputEl.value = String(bet);
+            startNewGame();
+        },
+
+        hit() {
+            hit();
+        },
+
+        stand() {
+            stand();
+        },
+
+
+        done() {
+            return inRound === false;
+        },
+
+        // get current game state
+        state() {
+            return {
+                inRound,
+                bankroll,
+                currentBet,
+                playerTotal: handValue(currentHand()),
+                dealerTotal: handValue(dealerHand)
+            };
+        }
+    };
+})();
