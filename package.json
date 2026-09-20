@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test:sim": "node tests/blackjack-sim.js",
-    "test:sim:long": "node tests/blackjack-sim.js 10000"
+    "test:sim:long": "node tests/blackjack-sim.js 10000",
+    "test:integration": "node tests/integration-api.js"
   }
 }
