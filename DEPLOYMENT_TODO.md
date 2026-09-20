@@ -4,7 +4,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## Immediate deployment blockers
 
-- [ ] Upgrade the API container from the end-of-life Node.js 20 image to a supported Node.js 24 LTS image.
+- [x] Upgrade the API container from the end-of-life Node.js 20 image to a supported Node.js 24 LTS image.
 - [ ] Choose the hosting platform and production domain.
 - [ ] Put the API behind an HTTPS reverse proxy or a managed platform that terminates HTTPS.
 - [ ] Create separate staging and production environments.
