@@ -20,14 +20,14 @@ concurrency:
 jobs:
   test:
     name: Checks and simulation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -44,14 +44,14 @@ jobs:
 
   dependency-audit:
     name: Production dependency audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -62,3 +62,72 @@ jobs:
 
       - name: Audit production dependencies
         run: npm audit --prefix backend --omit=dev --audit-level=high
+
+  integration:
+    name: API and PostgreSQL integration
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: blackjack
+          POSTGRES_PASSWORD: integration-password
+          POSTGRES_DB: blackjack
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U blackjack -d blackjack"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
+        run: npm run migrate --prefix backend
+
+      - name: Start API
+        env:
+          DATABASE_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
+          PORT: 3001
+          NODE_ENV: test
+          ALLOWED_ORIGINS: http://127.0.0.1:3001
+          ALLOW_FILE_ORIGIN: "false"
+        run: |
+          npm start --prefix backend > /tmp/blackjack-api.log 2>&1 &
+          echo $! > /tmp/blackjack-api.pid
+
+      - name: Wait for API
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3001/api/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/blackjack-api.log
+          exit 1
+
+      - name: Run API and PostgreSQL integration test
+        env:
+          API_URL: http://127.0.0.1:3001
+        run: npm run test:integration
+
+      - name: Show API log on failure
+        if: failure()
+        run: cat /tmp/blackjack-api.log
