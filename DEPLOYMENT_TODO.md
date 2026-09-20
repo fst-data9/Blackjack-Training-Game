@@ -28,10 +28,10 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## CI and deployment pipeline
 
-- [ ] Add a GitHub Actions pull-request workflow.
-- [ ] Run the backend syntax check in CI.
-- [ ] Run the blackjack simulation in CI.
-- [ ] Run the production dependency audit in CI.
+- [x] Add a GitHub Actions pull-request workflow.
+- [x] Run the backend syntax check in CI.
+- [x] Run the blackjack simulation in CI.
+- [x] Run the production dependency audit in CI.
 - [ ] Add automated API and PostgreSQL integration tests.
 - [ ] Deploy pushes to `dev` into the staging environment.
 - [ ] Deploy merges to `main` into the production environment.
