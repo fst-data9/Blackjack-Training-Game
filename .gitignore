@@ -16,3 +16,6 @@ backend/npm-debug.log
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+._*
+*:Zone.Identifier

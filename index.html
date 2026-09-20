@@ -9,24 +9,415 @@
     <style>
         body {
             font-family: system-ui, Arial;
-            padding: 24px;
+            padding: clamp(12px, 3vw, 24px);
             max-width: 760px;
             margin: 0 auto;
             background-color: #0f5132;
             color: #f1f5f3;
         }
 
-        h1 {
+        .account-bar {
+            position: sticky;
+            z-index: 20;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 10px;
+            background: rgba(10, 47, 32, 0.94);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(10px);
+        }
+
+        .account-brand {
+            color: #fff4cf;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .account-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .account-actions button {
+            margin: 0;
+            border: 1px solid #e7c66d;
+            border-radius: 8px;
+            background: #e7c66d;
+            color: #173d2d;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .account-actions .logout-button {
+            border-color: rgba(255, 255, 255, 0.55);
+            background: transparent;
+            color: #fff;
+        }
+
+        .account-name {
+            max-width: 180px;
+            overflow: hidden;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            z-index: 100;
+            inset: 0;
+            display: grid;
+            overflow-y: auto;
+            padding: 20px;
+            place-items: center;
+            background: rgba(3, 20, 13, 0.76);
+        }
+
+        .auth-card {
+            box-sizing: border-box;
+            width: min(100%, 420px);
+            padding: 24px;
+            border-radius: 16px;
+            background: #fff;
+            color: #173d2d;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+        }
+
+        .auth-heading-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .auth-heading-row h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .auth-close {
+            width: 36px;
+            height: 36px;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: #edf4f0;
+            color: #173d2d;
+            font-size: 1.35rem;
+            cursor: pointer;
+        }
+
+        .auth-intro {
+            margin: 8px 0 18px;
+            color: #52685e;
+        }
+
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-bottom: 18px;
+            padding: 4px;
+            border-radius: 10px;
+            background: #edf4f0;
+        }
+
+        .auth-tabs button {
+            margin: 0;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #486658;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .auth-tabs button[aria-selected="true"] {
+            background: #fff;
+            color: #173d2d;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.12);
+        }
+
+        .auth-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .auth-form label {
+            display: grid;
+            gap: 5px;
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .auth-form input {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #afc1b8;
+            border-radius: 8px;
+            color: #173d2d;
+            font: inherit;
+        }
+
+        .auth-form input:focus {
+            border-color: #157347;
+            outline: 3px solid rgba(21, 115, 71, 0.16);
+        }
+
+        .auth-submit {
+            margin: 4px 0 0;
+            border: 0;
+            border-radius: 8px;
+            background: #157347;
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .turnstile-widget {
+            display: flex;
+            min-height: 65px;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .auth-message {
+            min-height: 20px;
+            margin: 12px 0 0;
+            color: #a22929;
+            font-size: 0.86rem;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 14px 0;
+            color: #75877f;
+            font-size: 0.8rem;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            flex: 1;
+            border-top: 1px solid #d9e5df;
+        }
+
+        .google-signin {
+            display: flex;
+            min-height: 40px;
+            justify-content: center;
+        }
+
+        .google-unavailable {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #c8d1cc;
+            border-radius: 6px;
+            background: #f5f7f6;
+            color: #67766f;
             text-align: center;
-            letter-spacing: 2px;
+            font-size: 0.86rem;
+        }
+
+        .site-header {
             margin-bottom: 24px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .site-banner {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 14px;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.35);
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
         button {
             margin-right: 8px;
             margin-top: 8px;
             padding: 10px 14px;
+        }
+
+        .action-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .action-controls button {
+            margin: 0;
+            border: 1px solid #c8d5cf;
+            border-radius: 8px;
+            background: #f7faf8;
+            color: #173d2d;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            font-family: system-ui, Arial, sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .action-controls button:hover:not(:disabled),
+        .action-controls button:focus-visible {
+            border-color: #8db5a3;
+            background: #e7f3ed;
+            transform: translateY(-1px);
+        }
+
+        .action-controls button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .action-controls button:disabled {
+            opacity: 0.45;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        #newGameBtn {
+            min-width: 108px;
+        }
+
+        #insuranceBtn {
+            flex: 0 0 132px;
+            width: 132px;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #noInsuranceBtn {
+            flex: 0 0 112px;
+            width: 112px;
+            white-space: nowrap;
+        }
+
+        .deck-control {
+            display: flex;
+            align-items: center;
+            flex: 1 0 100%;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-sizing: border-box;
+            margin: 12px 0 4px;
+            padding: 12px 14px;
+            border: 1px solid #e7c66d;
+            border-radius: 10px;
+            background: #173d2d;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22);
+        }
+
+        .deck-control label {
+            font-weight: 700;
+        }
+
+        .deck-control select {
+            min-width: 64px;
+            padding: 7px 30px 7px 10px;
+            border: 2px solid #e7c66d;
+            border-radius: 7px;
+            background: #fff;
+            color: #173d2d;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .deck-control select:focus-visible {
+            outline: 3px solid rgba(231, 198, 109, 0.4);
+            outline-offset: 2px;
+        }
+
+        .deck-recommendation {
+            padding: 3px 7px;
+            border-radius: 999px;
+            background: #e7c66d;
+            color: #173d2d;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .deck-tooltip {
+            position: relative;
+            display: inline-flex;
+            margin-left: auto;
+        }
+
+        .deck-info-button {
+            display: grid;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            margin: 0;
+            padding: 0;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            background: transparent;
+            color: #fff;
+            box-shadow: none;
+            font-size: 0.9rem;
+        }
+
+        .deck-info-button:hover,
+        .deck-info-button:focus-visible {
+            border-color: #e7c66d;
+            background: #e7c66d;
+            color: #173d2d;
+            transform: none;
+        }
+
+        .deck-help {
+            position: absolute;
+            z-index: 10;
+            top: calc(100% + 9px);
+            right: 0;
+            width: min(270px, calc(100vw - 56px));
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #fff;
+            color: #173d2d;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.35);
+            font-size: 0.82rem;
+            line-height: 1.4;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-4px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+
+        .deck-tooltip:hover .deck-help,
+        .deck-tooltip:focus-within .deck-help {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .row {
@@ -38,15 +429,16 @@
         }
 
         .hand img {
-            width: 72px;
-            height: auto;
+            width: 92px;
+            height: 128px;
+            object-fit: contain;
             border-radius: 8px;
         }
 
         .dealt {
             opacity: 0;
-            transform: translateY(-10px);
-            animation: dealCard 0.25s ease-out forwards;
+            transform: translateY(-6px);
+            animation: dealCard 0.2s ease-out forwards;
         }
 
         @keyframes dealCard {
@@ -58,17 +450,344 @@
 
         .status {
             margin-top: 12px;
-            padding: 10px;
+            min-height: 24px;
+            padding: 12px 14px;
             border: 1px solid #ddd;
+            border-radius: 8px;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .status.round-result {
+            font-size: 1.05rem;
+            font-weight: 700;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+            animation: resultNotice 0.35s ease-out;
+        }
+
+        .status.round-result::before {
+            display: inline-block;
+            margin-right: 10px;
+            padding-right: 10px;
+            border-right: 1px solid currentColor;
+            font-size: 0.78rem;
+        }
+
+        .status.result-win {
+            border-color: #72c58f;
+            background: #e5f7eb;
+            color: #164c2a;
+        }
+
+        .status.result-win::before {
+            content: "WIN";
+        }
+
+        .status.result-lose {
+            border-color: #e58b8b;
+            background: #fff0f0;
+            color: #7d1f1f;
+        }
+
+        .status.result-lose::before {
+            content: "LOSS";
+        }
+
+        .status.result-push {
+            border-color: #e0bc62;
+            background: #fff8df;
+            color: #654b0b;
+        }
+
+        .status.result-push::before {
+            content: "PUSH";
+        }
+
+        .status.result-mixed {
+            border-color: #86a9c4;
+            background: #edf5fa;
+            color: #244d69;
+        }
+
+        .status.result-mixed::before {
+            content: "RESULTS";
+        }
+
+        @keyframes resultNotice {
+            from {
+                opacity: 0.65;
+                transform: scale(0.99);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .strategy-log {
+            margin-top: 10px;
+        }
+
+        .strategy-feedback {
+            margin-top: 8px;
+            padding: 12px;
+            border: 2px solid #fff;
             border-radius: 10px;
+            background: #fff;
+            color: #123629;
+        }
+
+        .strategy-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .strategy-result {
+            font-weight: 700;
+        }
+
+        .strategy-detail {
+            margin-top: 4px;
+        }
+
+        .strategy-hint {
+            margin-top: 8px;
+            color: #315b49;
+        }
+
+        .strategy-feedback.correct {
+            border-color: #b7f7c1;
+        }
+
+        .strategy-feedback.incorrect {
+            border-color: #ffd1d1;
+        }
+
+        .strategy-feedback button {
+            margin-top: 8px;
+        }
+
+        .chart-stats {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr);
+            gap: 16px;
+            align-items: stretch;
+            margin-top: 16px;
+        }
+
+        .table-image,
+        .stats-panel {
+            width: 100%;
+            min-height: 360px;
+            border-radius: 12px;
         }
 
         .table-image {
             display: block;
-            margin: 16px auto 0;
-            max-width: 100%;
-            border-radius: 12px;
-            transform: scale(0.85);
+            object-fit: contain;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-panel {
+            box-sizing: border-box;
+            padding: 16px;
+            background: #fff;
+            color: #123629;
+            overflow: auto;
+        }
+
+        .stats-panel h2 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .stats-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stats-tabs {
+            display: inline-flex;
+            gap: 3px;
+            padding: 3px;
+            border-radius: 8px;
+            background: #e6efea;
+        }
+
+        .stats-tabs button {
+            margin: 0;
+            padding: 6px 9px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: #486658;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .stats-tabs button[aria-selected="true"] {
+            background: #fff;
+            color: #123629;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+        }
+
+        .stats-note {
+            margin: -4px 0 12px;
+            color: #486658;
+            font-size: 0.8rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .stat {
+            border: 1px solid #d9e5df;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .stat-button {
+            width: 100%;
+            margin: 0;
+            padding: 8px;
+            text-align: left;
+            color: inherit;
+            background: #f2faf6;
+            cursor: pointer;
+        }
+
+        .stat-button:hover,
+        .stat-button:focus-visible {
+            border-color: #157347;
+            background: #e4f5ec;
+        }
+
+        .stat-button:disabled {
+            border-color: #d9e5df;
+            background: #f4f7f5;
+            opacity: 0.72;
+            cursor: default;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.78rem;
+            color: #486658;
+        }
+
+        .stat-value {
+            display: block;
+            margin-top: 2px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .history-list {
+            margin: 12px 0 0;
+            padding-left: 18px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            line-height: 1.35;
+            scrollbar-gutter: stable;
+        }
+
+        .history-list li {
+            margin-top: 4px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .review-page {
+            color: #123629;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .review-header h1 {
+            margin: 0;
+            color: #123629;
+            text-align: left;
+            text-shadow: none;
+            font-size: 1.6rem;
+        }
+
+        .review-summary {
+            margin: 0 0 16px;
+            color: #486658;
+        }
+
+        .review-hand {
+            padding: 14px 0;
+            border-top: 1px solid #d9e5df;
+        }
+
+        .review-hand h2 {
+            margin: 0 0 10px;
+            font-size: 1rem;
+        }
+
+        .review-decision {
+            margin-top: 8px;
+            padding: 10px;
+            border-left: 4px solid #83b69e;
+            background: #f4f8f6;
+        }
+
+        .review-decision.incorrect {
+            border-left-color: #c93737;
+            background: #fff3f3;
+        }
+
+        .review-decision-title {
+            font-weight: 700;
+        }
+
+        .review-card-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+            font-size: 0.82rem;
+        }
+
+        .review-card-row img {
+            width: 38px;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .review-moves {
+            margin-top: 7px;
+            font-size: 0.88rem;
+        }
+
+        @media (max-width: 780px) {
+            .chart-stats {
+                grid-template-columns: 1fr;
+            }
         }
 
         #bankrollRow {
@@ -84,26 +803,97 @@
             border: 1px solid #ccc;
         }
 
+        #resetBankrollBtn {
+            margin: 0 0 0 auto;
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            border-radius: 8px;
+            background: transparent;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #resetBankrollBtn:hover:not(:disabled),
+        #resetBankrollBtn:focus-visible {
+            border-color: #e7c66d;
+            background: #e7c66d;
+            color: #173d2d;
+        }
+
+        #resetBankrollBtn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
         /* ===== SPLIT HAND UI ===== */
 
         .hands {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            align-items: start;
             gap: 16px;
             margin-top: 6px;
         }
 
+        .hands.hand-count-2,
+        .hands.hand-count-4 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .hands.hand-count-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
         .hand-panel {
+            box-sizing: border-box;
+            width: 100%;
+            min-width: 0;
+            min-height: 198px;
             border: 1px solid rgba(255, 255, 255, 0.25);
             border-radius: 12px;
             padding: 12px;
-            min-width: 280px;
-            transition: all 0.15s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
         }
 
         .hand-panel.active {
             border-color: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12);
+        }
+
+        .hand-panel .cards {
+            display: flex;
+            align-items: flex-start;
+            min-height: 128px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .hand-panel .cards img {
+            flex: 0 0 92px;
+        }
+
+        .hand-count-2 .hand-panel .cards img + img {
+            margin-left: -28px;
+        }
+
+        .hand-count-3 .hand-panel .cards img + img,
+        .hand-count-4 .hand-panel .cards img + img {
+            margin-left: -62px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .dealt {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+
+            .action-controls button,
+            .hand-panel,
+            .status.round-result {
+                transition: none;
+                animation: none;
+            }
         }
 
         .hand-panel.inactive {
@@ -121,11 +911,81 @@
             font-weight: 400;
             opacity: 0.85;
         }
+
+        @media (max-width: 560px) {
+            .account-bar {
+                gap: 8px;
+            }
+
+            .account-brand {
+                font-size: 0.88rem;
+            }
+
+            .account-name {
+                max-width: 92px;
+            }
+
+            .auth-overlay {
+                padding: 12px;
+            }
+
+            .auth-card {
+                padding: 20px;
+            }
+
+            .site-banner {
+                height: clamp(140px, 44vw, 175px);
+                object-fit: cover;
+                object-position: center;
+            }
+
+            .deck-recommendation {
+                order: 4;
+            }
+
+            .deck-tooltip {
+                margin-left: auto;
+            }
+
+            .hands.hand-count-2,
+            .hands.hand-count-3,
+            .hands.hand-count-4 {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .hand-count-2 .hand-panel .cards img + img,
+            .hand-count-3 .hand-panel .cards img + img,
+            .hand-count-4 .hand-panel .cards img + img {
+                margin-left: -50px;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <h1>Basic Blackjack Training</h1>
+    <nav class="account-bar" aria-label="Account navigation">
+        <span class="account-brand">♠ Blackjack Trainer</span>
+        <div class="account-actions">
+            <button id="openAuthBtn" type="button">Log in</button>
+            <div id="signedInActions" class="account-actions" hidden>
+                <span id="accountName" class="account-name"></span>
+                <button id="logoutBtn" class="logout-button" type="button">Log out</button>
+            </div>
+        </div>
+    </nav>
+
+    <main id="gamePage">
+    <header class="site-header">
+        <h1 class="visually-hidden">Basic Blackjack Training</h1>
+        <img
+            class="site-banner"
+            src="images/Blackjack-Training-Banner.png"
+            alt=""
+            width="2172"
+            height="724"
+            fetchpriority="high"
+        />
+    </header>
 
     <!-- Dealer -->
     <div class="row">
@@ -139,54 +999,21 @@
         <strong>You:</strong>
 
         <div id="playerHandsUI" class="hands">
-
-            <!-- Hand 1 -->
-            <div id="handPanel0" class="hand-panel">
-                <div class="hand-header">
-                    <span>Hand 1</span>
-                    <span id="handBet0" class="hand-bet"></span>
-                </div>
-                <div id="playerCards0" class="cards hand"></div>
-                <div id="playerTotal0"></div>
-            </div>
-
-            <!-- Hand 2 (hidden unless split) -->
-            <div id="handPanel1" class="hand-panel" style="display:none;">
-                <div class="hand-header">
-                    <span>Hand 2</span>
-                    <span id="handBet1" class="hand-bet"></span>
-                </div>
-                <div id="playerCards1" class="cards hand"></div>
-                <div id="playerTotal1"></div>
-            </div>
-
         </div>
     </div>
 
     <!-- Controls -->
-    <div class="row">
-        <button id="newGameBtn">New Game</button>
+    <div class="row action-controls">
+        <button id="newGameBtn">Deal</button>
         <button id="hitBtn" disabled>Hit</button>
         <button id="standBtn" disabled>Stand</button>
         <button id="surrenderBtn" disabled>Surrender</button>
         <button id="doubleBtn" disabled>Double</button>
         <button id="splitBtn" disabled>Split</button>
+        <button id="insuranceBtn" disabled>Insurance</button>
+        <button id="noInsuranceBtn" disabled>No Insurance</button>
 
-        <label style="margin-left: 20px;">
-            Decks:
-            <select id="deckCountSelect">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="6">6</option>
-                <option value="8">8</option>
-            </select>
-        </label>
     </div>
-
-    <!-- Status -->
-    <div id="status" class="status">Click “New Game”.</div>
 
     <!-- Bankroll -->
     <div class="row" id="bankrollRow">
@@ -195,11 +1022,154 @@
             <label for="betInput"><strong>Bet:</strong></label>
             $<input id="betInput" type="number" min="1" step="1" value="25" style="width:90px;">
         </span>
+        <button id="resetBankrollBtn" type="button">Reset bankroll</button>
     </div>
 
-    <img src="images/basic_strategy.jpg" alt="Casino table" class="table-image" />
+    <!-- Status -->
+    <div id="status" class="status" role="status" aria-live="polite" aria-atomic="true">Click “Deal to Start New Game”.</div>
+
+    <div class="deck-control">
+        <label for="deckCountSelect">Decks in shoe</label>
+        <select id="deckCountSelect" aria-describedby="deckHelp">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="6" selected>6</option>
+            <option value="8">8</option>
+        </select>
+        <span class="deck-recommendation">Casino standard</span>
+        <span class="deck-tooltip">
+            <button class="deck-info-button" type="button" aria-label="About deck selection">?</button>
+            <span id="deckHelp" class="deck-help" role="tooltip">
+                Six decks is the most common casino shoe size, though many tables use eight. Choose a different count to practise other table setups.
+            </span>
+        </span>
+    </div>
+
+    <div id="strategyLog" class="strategy-log"></div>
+
+    <section class="chart-stats">
+        <img src="images/basic_strategy.jpg" alt="Basic strategy chart" class="table-image" />
+
+        <aside class="stats-panel">
+            <div class="stats-header">
+                <h2 id="statsHeading">Training Stats</h2>
+                <div class="stats-tabs" role="tablist" aria-label="Statistics period">
+                    <button id="sessionStatsTab" type="button" role="tab" aria-selected="true">Session</button>
+                    <button id="userStatsTab" type="button" role="tab" aria-selected="false">User</button>
+                </div>
+            </div>
+            <p id="statsNote" class="stats-note">This browser session</p>
+            <div class="stats-grid">
+                <div class="stat">
+                    <span class="stat-label">Rounds</span>
+                    <span id="statsRounds" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Hands</span>
+                    <span id="statsHands" class="stat-value">0</span>
+                </div>
+                <button id="openReviewBtn" class="stat stat-button" type="button" aria-label="Review incorrect decisions">
+                    <span class="stat-label">Correct Decisions</span>
+                    <span id="statsCorrect" class="stat-value">0 / 0</span>
+                </button>
+                <div class="stat">
+                    <span class="stat-label">Accuracy</span>
+                    <span id="statsAccuracy" class="stat-value">0%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Actual Return</span>
+                    <span id="statsActual" class="stat-value">$0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Expected Return (-0.5%)</span>
+                    <span id="statsEv" class="stat-value">$0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Wagered</span>
+                    <span id="statsWagered" class="stat-value">$0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Hints Revealed</span>
+                    <span id="statsHints" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Win / Loss / Push</span>
+                    <span id="statsOutcomes" class="stat-value">0 / 0 / 0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Insurance Taken</span>
+                    <span id="statsInsurance" class="stat-value">0 / 0 offers</span>
+                </div>
+            </div>
+            <ol id="statsHistory" class="history-list"></ol>
+        </aside>
+    </section>
+    </main>
+
+    <main id="reviewPage" class="review-page" hidden>
+        <header class="review-header">
+            <h1>Decision Review</h1>
+            <button id="closeReviewBtn" type="button">Back to Game</button>
+        </header>
+        <p id="reviewSummary" class="review-summary"></p>
+        <div id="reviewHands"></div>
+    </main>
+
+    <section id="authOverlay" class="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="authTitle" hidden>
+        <div class="auth-card">
+            <div class="auth-heading-row">
+                <h2 id="authTitle">Your account</h2>
+                <button id="closeAuthBtn" class="auth-close" type="button" aria-label="Close login">×</button>
+            </div>
+            <p class="auth-intro">Save your training sessions and keep your progress connected.</p>
+
+            <div class="auth-tabs" role="tablist" aria-label="Account options">
+                <button id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginForm">Log in</button>
+                <button id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="registerForm">Create account</button>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+                <label>
+                    Email
+                    <input name="email" type="email" autocomplete="email" required />
+                </label>
+                <label>
+                    Password
+                    <input name="password" type="password" autocomplete="current-password" required />
+                </label>
+                <button class="auth-submit" type="submit">Log in</button>
+            </form>
+
+            <form id="registerForm" class="auth-form" hidden>
+                <label>
+                    Name
+                    <input name="displayName" type="text" autocomplete="name" maxlength="80" required />
+                </label>
+                <label>
+                    Email
+                    <input name="email" type="email" autocomplete="email" required />
+                </label>
+                <label>
+                    Password
+                    <input name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required />
+                </label>
+                <div id="turnstileWidget" class="turnstile-widget" hidden></div>
+                <input id="turnstileToken" name="turnstileToken" type="hidden" />
+                <button class="auth-submit" type="submit">Create account</button>
+            </form>
+
+            <p id="authMessage" class="auth-message" role="status" aria-live="polite"></p>
+            <div class="auth-divider">or</div>
+            <div id="googleSignIn" class="google-signin">
+                <div class="google-unavailable">Google sign-in needs a client ID</div>
+            </div>
+        </div>
+    </section>
 
     <script src="blackjack-game.js"></script>
+    <script src="auth.js"></script>
 
     <footer class="credits">
         <em>
