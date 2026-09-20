@@ -17,8 +17,8 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## Database and migrations
 
-- [ ] Add a versioned migration runner instead of relying only on PostgreSQL initialization scripts.
-- [ ] Run pending migrations automatically or as an explicit release step before the new application starts.
+- [x] Add a versioned migration runner instead of relying only on PostgreSQL initialization scripts.
+- [x] Run pending migrations automatically or as an explicit release step before the new application starts.
 - [ ] Create a dedicated, least-privilege PostgreSQL role for the API.
 - [ ] Keep PostgreSQL on a private network.
 - [ ] Require certificate-verified TLS if PostgreSQL is hosted on another machine.

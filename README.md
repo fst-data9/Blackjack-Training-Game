@@ -58,18 +58,13 @@ This is a small blackjack trainer for basic strategy practice. The browser game 
 
 The API serves the browser game at the same address so secure, HttpOnly login cookies work locally. Opening `index.html` directly is still useful for game-only development, but account cookies may be restricted by the browser in `file://` mode.
 
-The SQL files in `database/init/` run automatically when Podman creates a new Postgres data volume. If `blackjack_pgdata` already exists, Podman will keep the current database as-is.
-
-For an existing database created before login support was added, apply the authentication migration once:
+The SQL files in `database/init/` run automatically when Podman creates a new Postgres data volume. If `blackjack_pgdata` already exists, Podman will keep the current database as-is. Apply any pending migrations to an existing database with the versioned migration runner:
 
 ```sh
-podman cp database/init/002_auth.sql blackjack-postgres:/tmp/002_auth.sql
-podman exec blackjack-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/002_auth.sql'
-podman cp database/init/003_session_stats.sql blackjack-postgres:/tmp/003_session_stats.sql
-podman exec blackjack-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/003_session_stats.sql'
-podman cp database/init/004_security.sql blackjack-postgres:/tmp/004_security.sql
-podman exec blackjack-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /tmp/004_security.sql'
+podman-compose run --rm api npm run migrate
 ```
+
+The runner records applied files and their checksums in `schema_migrations`, prevents concurrent migration runs, and applies each pending migration transactionally. See [database/README.md](database/README.md) for the migration workflow and rules.
 
 ## Accounts and Google sign-in
 
