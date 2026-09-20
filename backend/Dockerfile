@@ -10,6 +10,7 @@ RUN npm --prefix backend ci
 COPY backend ./backend
 COPY index.html blackjack-game.js auth.js ./
 COPY images ./images
+COPY database ./database
 
 WORKDIR /app/backend
 
