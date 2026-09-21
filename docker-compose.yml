@@ -2,6 +2,7 @@ services:
   postgres:
     image: docker.io/library/postgres:16
     container_name: blackjack-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -11,12 +12,19 @@ services:
     volumes:
       - blackjack_pgdata:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
 
   api:
     build:
       context: .
       dockerfile: backend/Dockerfile
     container_name: blackjack-api
+    restart: unless-stopped
     env_file:
       - ./backend/.env
     ports:
@@ -29,7 +37,14 @@ services:
     cap_drop:
       - ALL
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/api/health').then((r) => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
 
 volumes:
   blackjack_pgdata:
