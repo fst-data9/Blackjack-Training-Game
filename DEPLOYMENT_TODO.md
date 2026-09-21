@@ -5,9 +5,9 @@ This checklist tracks the work required to move the Blackjack Training Game from
 ## Immediate deployment blockers
 
 - [x] Upgrade the API container from the end-of-life Node.js 20 image to a supported Node.js 24 LTS image.
-- [ ] Choose the hosting platform and production domain.
-- [ ] Put the API behind an HTTPS reverse proxy or a managed platform that terminates HTTPS.
-- [ ] Create separate staging and production environments.
+- [x] Choose the hosting platform and deployed domain (`staging.blackjack-trainer.co`; production domain still to be selected).
+- [x] Put the API behind an HTTPS reverse proxy or a managed platform that terminates HTTPS.
+- [x] Create separate staging and production environments.
 - [ ] Configure production environment variables and secrets outside the repository.
 - [ ] Set `NODE_ENV=production`.
 - [ ] Set `ALLOWED_ORIGINS` to the exact deployed HTTPS origin.
@@ -20,7 +20,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 - [x] Add a versioned migration runner instead of relying only on PostgreSQL initialization scripts.
 - [x] Run pending migrations automatically or as an explicit release step before the new application starts.
 - [ ] Create a dedicated, least-privilege PostgreSQL role for the API.
-- [ ] Keep PostgreSQL on a private network.
+- [x] Keep PostgreSQL on a private network.
 - [ ] Require certificate-verified TLS if PostgreSQL is hosted on another machine.
 - [ ] Configure encrypted automatic backups.
 - [ ] Perform and document a database restore test.
@@ -42,10 +42,10 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## Container and runtime reliability
 
-- [ ] Add API and PostgreSQL container health checks.
-- [ ] Make API startup wait for a healthy database or retry failed initial connections.
-- [ ] Add suitable container restart policies.
-- [ ] Handle `SIGTERM` and `SIGINT` for graceful HTTP server and PostgreSQL pool shutdown.
+- [x] Add API and PostgreSQL container health checks.
+- [x] Make API startup wait for a healthy database or retry failed initial connections.
+- [x] Add suitable container restart policies.
+- [x] Handle `SIGTERM` and `SIGINT` for graceful HTTP server and PostgreSQL pool shutdown.
 - [ ] Confirm persistent database storage survives application redeployments.
 - [ ] Pin or regularly update production container image versions.
 - [ ] Test the complete production container configuration before launch.
@@ -100,7 +100,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ### Staging
 
-- [ ] HTTPS staging URL is available.
+- [x] HTTPS staging URL is available.
 - [ ] Staging database and secrets are separate from production.
 - [ ] Migrations, health checks, automated tests, logging, and backups are working.
 - [ ] Registration, login, gameplay, and user statistics pass a complete smoke test.
