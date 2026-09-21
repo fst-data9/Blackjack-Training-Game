@@ -1,0 +1,22 @@
+services:
+  caddy:
+    image: docker.io/library/caddy:2-alpine
+    container_name: blackjack-caddy
+    profiles: ["staging"]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/staging/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+    name: blackjack_staging_caddy_data
+  caddy_config:
+    name: blackjack_staging_caddy_config
