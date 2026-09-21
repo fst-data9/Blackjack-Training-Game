@@ -7,6 +7,18 @@ is the only service published on the VPS's public HTTP and HTTPS ports.
 
 Run these commands from `/opt/blackjack` after checking out `dev`:
 
+For repeat deployments, use the checked-in script:
+
+```sh
+bash scripts/deploy-staging.sh
+```
+
+It requires a clean `dev` checkout, fast-forwards from `origin/dev`, builds the
+API, applies migrations, starts the staging profile, and checks the HTTPS health
+endpoint.
+
+The equivalent manual commands are:
+
 ```sh
 docker compose -f docker-compose.yml -f deploy/staging/docker-compose.yml build
 docker compose -f docker-compose.yml -f deploy/staging/docker-compose.yml run --rm api npm run migrate
