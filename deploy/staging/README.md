@@ -28,6 +28,9 @@ docker compose -f docker-compose.yml -f deploy/staging/docker-compose.yml ps
 
 The staging environment must provide `/opt/blackjack/.env` and
 `/opt/blackjack/backend/.env` separately from development and production.
+The server checkout must also have permission to fast-forward from
+`origin/dev`, either through a deploy key or another non-interactive Git
+credential.
 
 `backend/.env` should include at least:
 
@@ -50,6 +53,21 @@ POSTGRES_VOLUME_NAME=blackjack_staging_pgdata
 ```
 
 Keep both files outside version control and set their permissions to `600`.
+
+## GitHub Actions deployment
+
+The `staging` GitHub environment must contain these secrets:
+
+| Secret | Purpose |
+| --- | --- |
+| `STAGING_HOST` | Staging VPS hostname or IP address |
+| `STAGING_USER` | SSH user allowed to deploy `/opt/blackjack` |
+| `STAGING_SSH_PRIVATE_KEY` | Private key for that SSH user |
+| `STAGING_KNOWN_HOSTS` | Exact `known_hosts` entry for the staging host |
+
+After the required CI checks pass, a push to `dev` connects to the host and
+runs `scripts/deploy-staging.sh`. Deployments are serialized so two staging
+deployments cannot run at the same time.
 
 ## Verification
 
