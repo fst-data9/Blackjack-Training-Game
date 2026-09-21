@@ -1,4 +1,4 @@
-const authApiBase = window.API_BASE || "http://localhost:3001";
+const authApiBase = window.API_BASE || window.location.origin;
 const openAuthBtn = document.getElementById("openAuthBtn");
 const closeAuthBtn = document.getElementById("closeAuthBtn");
 const authOverlay = document.getElementById("authOverlay");
