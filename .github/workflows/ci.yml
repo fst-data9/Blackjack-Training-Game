@@ -149,10 +149,16 @@ jobs:
       - name: Configure SSH
         env:
           STAGING_KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
           STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
         run: |
           install -d -m 700 ~/.ssh
-          printf '%s\n' "$STAGING_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          if [[ -n "$STAGING_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$STAGING_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "STAGING_KNOWN_HOSTS is not configured; discovering the staging host key"
+            ssh-keyscan -H "$STAGING_HOST" > ~/.ssh/known_hosts
+          fi
           printf '%s\n' "$STAGING_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/known_hosts ~/.ssh/id_ed25519
 

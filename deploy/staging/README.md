@@ -63,7 +63,11 @@ The `staging` GitHub environment must contain these secrets:
 | `STAGING_HOST` | Staging VPS hostname or IP address |
 | `STAGING_USER` | SSH user allowed to deploy `/opt/blackjack` |
 | `STAGING_SSH_PRIVATE_KEY` | Private key for that SSH user |
-| `STAGING_KNOWN_HOSTS` | Exact `known_hosts` entry for the staging host |
+| `STAGING_KNOWN_HOSTS` | Exact `known_hosts` entry for the staging host (recommended) |
+
+If `STAGING_KNOWN_HOSTS` is temporarily omitted, the workflow discovers the
+host key with `ssh-keyscan`. Add the verified entry as soon as possible so a
+man-in-the-middle attack cannot be accepted on the first connection.
 
 After the required CI checks pass, a push to `dev` connects to the host and
 runs `scripts/deploy-staging.sh`. Deployments are serialized so two staging
