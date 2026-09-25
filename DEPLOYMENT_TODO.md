@@ -33,7 +33,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 - [x] Run the blackjack simulation in CI.
 - [x] Run the production dependency audit in CI.
 - [x] Add automated API and PostgreSQL integration tests.
-- [ ] Deploy pushes to `dev` into the staging environment.
+- [x] Deploy pushes to `dev` into the staging environment.
 - [ ] Deploy merges to `main` into the production environment.
 - [ ] Configure separate GitHub staging and production environments and secrets.
 - [ ] Require passing checks before merging into `dev` or `main`.
