@@ -170,3 +170,41 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes
           "$STAGING_USER@$STAGING_HOST"
           'cd /opt/blackjack && bash scripts/deploy-staging.sh'
+
+  deploy-production:
+    name: Deploy production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - test
+      - dependency-audit
+      - integration
+    runs-on: ubuntu-24.04
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Configure SSH
+        env:
+          PRODUCTION_KNOWN_HOSTS: ${{ secrets.PRODUCTION_KNOWN_HOSTS }}
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          if [[ -z "$PRODUCTION_KNOWN_HOSTS" ]]; then
+            echo "PRODUCTION_KNOWN_HOSTS must be configured for production" >&2
+            exit 1
+          fi
+          printf '%s\n' "$PRODUCTION_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$PRODUCTION_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/known_hosts ~/.ssh/id_ed25519
+
+      - name: Deploy production over SSH
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ secrets.PRODUCTION_USER }}
+        run: >-
+          ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes
+          "$PRODUCTION_USER@$PRODUCTION_HOST"
+          'cd /opt/blackjack && bash scripts/deploy-production.sh'
