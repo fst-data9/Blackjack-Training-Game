@@ -5,15 +5,15 @@ This checklist tracks the work required to move the Blackjack Training Game from
 ## Immediate deployment blockers
 
 - [x] Upgrade the API container from the end-of-life Node.js 20 image to a supported Node.js 24 LTS image.
-- [x] Choose the hosting platform and deployed domain (`staging.blackjack-trainer.co`; production domain still to be selected).
+- [x] Choose the hosting platform and deployed domains (`staging.blackjack-trainer.co` and `blackjack-trainer.co`).
 - [x] Put the API behind an HTTPS reverse proxy or a managed platform that terminates HTTPS.
 - [x] Create separate staging and production environments.
-- [ ] Configure production environment variables and secrets outside the repository.
-- [ ] Set `NODE_ENV=production`.
-- [ ] Set `ALLOWED_ORIGINS` to the exact deployed HTTPS origin.
-- [ ] Set `ALLOW_FILE_ORIGIN=false`.
-- [ ] Configure `TRUST_PROXY_HOPS` for the actual proxy chain.
-- [ ] Generate unique database credentials and store them in a secret manager.
+- [x] Configure production environment variables and secrets outside the repository.
+- [x] Set `NODE_ENV=production`.
+- [x] Set `ALLOWED_ORIGINS` to the exact deployed HTTPS origin.
+- [x] Set `ALLOW_FILE_ORIGIN=false`.
+- [x] Configure `TRUST_PROXY_HOPS` for the actual proxy chain.
+- [x] Generate unique database credentials and store them outside the repository.
 
 ## Database and migrations
 
@@ -34,8 +34,8 @@ This checklist tracks the work required to move the Blackjack Training Game from
 - [x] Run the production dependency audit in CI.
 - [x] Add automated API and PostgreSQL integration tests.
 - [x] Deploy pushes to `dev` into the staging environment.
-- [ ] Deploy merges to `main` into the production environment.
-- [ ] Configure separate GitHub staging and production environments and secrets.
+- [x] Deploy merges to `main` into the production environment.
+- [x] Configure separate GitHub staging and production environments and secrets.
 - [ ] Require passing checks before merging into `dev` or `main`.
 - [ ] Require manual approval for production deployment if appropriate.
 - [ ] Prevent concurrent deployments to the same environment.
@@ -63,7 +63,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## Monitoring and operations
 
-- [ ] Add structured application and request logging without recording passwords, tokens, or other secrets.
+- [x] Add structured application and request logging without recording passwords, tokens, or other secrets.
 - [ ] Send production logs to persistent centralized storage.
 - [ ] Add uptime monitoring for the website and `/api/health`.
 - [ ] Add alerts for repeated server errors, database failures, and resource exhaustion.
@@ -101,9 +101,9 @@ This checklist tracks the work required to move the Blackjack Training Game from
 ### Staging
 
 - [x] HTTPS staging URL is available.
-- [ ] Staging database and secrets are separate from production.
+- [x] Staging database and secrets are separate from production.
 - [ ] Migrations, health checks, automated tests, logging, and backups are working.
-- [ ] Registration, login, gameplay, and user statistics pass a complete smoke test.
+- [x] Registration, login, gameplay, and user statistics pass a complete smoke test.
 
 ### Public beta
 

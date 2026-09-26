@@ -56,3 +56,19 @@ to `main` after all required CI checks pass.
 curl --fail https://blackjack-trainer.co/api/health
 docker compose -f docker-compose.yml -f deploy/production/docker-compose.yml ps
 ```
+
+## Request analytics
+
+Caddy writes structured request logs to the container output. On the server,
+install `jq` once and run the report from the repository root:
+
+```sh
+sudo apt install jq
+CADDY_CONTAINER=blackjack-caddy bash scripts/request-report.sh 24h
+```
+
+The report includes total requests, approximate unique client IPs, status
+codes, and the most-requested paths. Client IPs are retained only in the
+rotated Docker logs; do not publish the raw logs. Unique-client counts are
+approximate because multiple people may share an IP and one person may use
+multiple addresses.
