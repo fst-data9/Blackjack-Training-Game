@@ -842,9 +842,29 @@ app.use((err, req, res, next) => {
   return res.status(500).json({ error: "Internal server error" });
 });
 
-// ---- Start the server ----
+// ---- Start and stop the server ----
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`API listening on port ${PORT}`);
 });
+
+let shuttingDown = false;
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`Received ${signal}; shutting down`);
+  rateLimitCleanup.unref();
+  server.close(async () => {
+    try {
+      await pool.end();
+      process.exit(0);
+    } catch (err) {
+      console.error("Failed to close PostgreSQL pool:", err);
+      process.exit(1);
+    }
+  });
+}
+
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => shutdown("SIGINT"));

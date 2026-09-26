@@ -1,0 +1,210 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Checks and simulation
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: Validate backend and migrations
+        run: npm run check --prefix backend
+
+      - name: Run blackjack simulation
+        run: npm run test:sim
+
+  dependency-audit:
+    name: Production dependency audit
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: Audit production dependencies
+        run: npm audit --prefix backend --omit=dev --audit-level=high
+
+  integration:
+    name: API and PostgreSQL integration
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: blackjack
+          POSTGRES_PASSWORD: integration-password
+          POSTGRES_DB: blackjack
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U blackjack -d blackjack"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
+        run: npm run migrate --prefix backend
+
+      - name: Start API
+        env:
+          DATABASE_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
+          PORT: 3001
+          NODE_ENV: test
+          ALLOWED_ORIGINS: http://127.0.0.1:3001
+          ALLOW_FILE_ORIGIN: "false"
+        run: |
+          npm start --prefix backend > /tmp/blackjack-api.log 2>&1 &
+          echo $! > /tmp/blackjack-api.pid
+
+      - name: Wait for API
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3001/api/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/blackjack-api.log
+          exit 1
+
+      - name: Run API and PostgreSQL integration test
+        env:
+          API_URL: http://127.0.0.1:3001
+        run: npm run test:integration
+
+      - name: Show API log on failure
+        if: failure()
+        run: cat /tmp/blackjack-api.log
+
+  deploy-staging:
+    name: Deploy staging
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    needs:
+      - test
+      - dependency-audit
+      - integration
+    runs-on: ubuntu-24.04
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+
+    steps:
+      - name: Configure SSH
+        env:
+          STAGING_KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          if [[ -n "$STAGING_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$STAGING_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "STAGING_KNOWN_HOSTS is not configured; discovering the staging host key"
+            ssh-keyscan -H "$STAGING_HOST" > ~/.ssh/known_hosts
+          fi
+          printf '%s\n' "$STAGING_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/known_hosts ~/.ssh/id_ed25519
+
+      - name: Deploy staging over SSH
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_USER: ${{ secrets.STAGING_USER }}
+        run: >-
+          ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes
+          "$STAGING_USER@$STAGING_HOST"
+          'cd /opt/blackjack && bash scripts/deploy-staging.sh'
+
+  deploy-production:
+    name: Deploy production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - test
+      - dependency-audit
+      - integration
+    runs-on: ubuntu-24.04
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Configure SSH
+        env:
+          PRODUCTION_KNOWN_HOSTS: ${{ secrets.PRODUCTION_KNOWN_HOSTS }}
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          if [[ -z "$PRODUCTION_KNOWN_HOSTS" ]]; then
+            echo "PRODUCTION_KNOWN_HOSTS must be configured for production" >&2
+            exit 1
+          fi
+          printf '%s\n' "$PRODUCTION_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$PRODUCTION_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/known_hosts ~/.ssh/id_ed25519
+
+      - name: Deploy production over SSH
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ secrets.PRODUCTION_USER }}
+        run: >-
+          ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes
+          "$PRODUCTION_USER@$PRODUCTION_HOST"
+          'cd /opt/blackjack && bash scripts/deploy-production.sh'

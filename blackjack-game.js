@@ -7,7 +7,7 @@ const bankrollAmtEl = document.getElementById("bankrollAmt");
 const betInputEl = document.getElementById("betInput");
 let sessionId = crypto.randomUUID();
 window.BLACKJACK_SESSION_ID = sessionId;
-window.API_BASE = window.API_BASE || "http://localhost:3001";
+window.API_BASE = window.API_BASE || window.location.origin;
 
 function createDeck() {
     const deck = [];
