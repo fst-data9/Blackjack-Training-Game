@@ -1,0 +1,4 @@
+blackjack-trainer.co {
+    encode gzip
+    reverse_proxy api:3001
+}
