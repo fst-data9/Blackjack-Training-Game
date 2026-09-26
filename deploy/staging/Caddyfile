@@ -1,4 +1,8 @@
 staging.blackjack-trainer.co {
     encode gzip
+    log {
+        output stdout
+        format json
+    }
     reverse_proxy api:3001
 }
