@@ -4,6 +4,17 @@ Production uses the same container layout as staging, with PostgreSQL and the
 API kept on Docker's private network. Caddy is the only service published on
 the VPS's public HTTP and HTTPS ports.
 
+The DNS zone should point the apex domain to the production server and use a
+CNAME for `www`:
+
+```text
+@     A       <production IPv4>
+www   CNAME   blackjack-trainer.co
+```
+
+Caddy serves both `blackjack-trainer.co` and `www.blackjack-trainer.co` over
+HTTPS.
+
 The production server checkout must use `main` and provide these files outside
 version control:
 
@@ -54,6 +65,7 @@ to `main` after all required CI checks pass.
 
 ```sh
 curl --fail https://blackjack-trainer.co/api/health
+curl --fail https://www.blackjack-trainer.co/api/health
 docker compose -f docker-compose.yml -f deploy/production/docker-compose.yml ps
 ```
 
