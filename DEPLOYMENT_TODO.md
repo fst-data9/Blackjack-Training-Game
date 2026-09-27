@@ -5,7 +5,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 ## Immediate deployment blockers
 
 - [x] Upgrade the API container from the end-of-life Node.js 20 image to a supported Node.js 24 LTS image.
-- [x] Choose the hosting platform and deployed domains (`staging.blackjack-trainer.co` and `blackjack-trainer.co`).
+- [x] Choose the hosting platform and deployed domains (`staging.blackjack-trainer.co`, `blackjack-trainer.co`, and `www.blackjack-trainer.co`).
 - [x] Put the API behind an HTTPS reverse proxy or a managed platform that terminates HTTPS.
 - [x] Create separate staging and production environments.
 - [x] Configure production environment variables and secrets outside the repository.
@@ -38,7 +38,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 - [x] Configure separate GitHub staging and production environments and secrets.
 - [ ] Require passing checks before merging into `dev` or `main`.
 - [ ] Require manual approval for production deployment if appropriate.
-- [ ] Prevent concurrent deployments to the same environment.
+- [x] Prevent concurrent deployments to the same environment.
 
 ## Container and runtime reliability
 
