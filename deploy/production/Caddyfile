@@ -1,4 +1,4 @@
-blackjack-trainer.co {
+blackjack-trainer.co, www.blackjack-trainer.co {
     encode gzip
     log {
         output stdout
