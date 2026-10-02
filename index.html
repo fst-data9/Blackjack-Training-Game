@@ -19,18 +19,20 @@
         .account-bar {
             position: fixed;
             z-index: 20;
-            top: 16px;
-            left: 50%;
+            top: 0;
+            left: 0;
             box-sizing: border-box;
-            width: min(calc(100% - 32px), 1120px);
-            transform: translateX(-50%);
+            width: 100%;
+            transform: none;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
             padding: 8px 12px;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 12px;
+            border-right: 0;
+            border-left: 0;
+            border-radius: 0;
             background: rgba(12, 13, 15, 0.9);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
             backdrop-filter: blur(10px);
@@ -63,6 +65,33 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .account-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: auto;
+            margin-left: 18px;
+        }
+
+        .account-nav button {
+            padding: 8px 11px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: #b9bdc5;
+            font: inherit;
+            font-size: 0.92rem;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        .account-nav button:hover,
+        .account-nav button[aria-current="page"] {
+            border-color: rgba(255, 255, 255, 0.06);
+            background: #1b1d21;
+            color: #fff;
         }
 
         .account-actions button {
@@ -269,7 +298,7 @@
         .site-banner {
             display: block;
             width: 100%;
-            height: clamp(220px, 38vw, 460px);
+            height: clamp(120px, 19vw, 230px);
             object-fit: cover;
             object-position: center;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -280,6 +309,31 @@
             width: min(100%, 760px);
             margin: 0 auto;
             padding: 0 clamp(12px, 3vw, 24px) 24px;
+        }
+
+        .placeholder-page {
+            box-sizing: border-box;
+            width: min(100% - 32px, 760px);
+            min-height: 320px;
+            margin: 0 auto 24px;
+            padding: clamp(28px, 6vw, 56px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            background: rgba(6, 48, 29, 0.72);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+            text-align: center;
+        }
+
+        .placeholder-page h1 {
+            margin-top: 0;
+            color: #fff4cf;
+        }
+
+        .placeholder-page p {
+            max-width: 520px;
+            margin: 0 auto;
+            color: #d5e2db;
+            line-height: 1.6;
         }
 
         .visually-hidden {
@@ -952,13 +1006,22 @@
 
         @media (max-width: 560px) {
             .account-bar {
-                top: 10px;
-                width: calc(100% - 20px);
+                top: 0;
+                left: 0;
+                width: 100%;
+                transform: none;
+                border-right: 0;
+                border-left: 0;
+                border-radius: 0;
                 gap: 8px;
             }
 
             .account-brand {
                 font-size: 0.88rem;
+            }
+
+            .account-nav {
+                display: none;
             }
 
             .account-name {
@@ -974,7 +1037,7 @@
             }
 
             .site-banner {
-                height: clamp(190px, 55vw, 300px);
+                height: clamp(110px, 27vw, 160px);
             }
 
             .deck-recommendation {
@@ -1003,6 +1066,13 @@
 <body>
     <nav class="account-bar" aria-label="Account navigation">
         <span class="account-brand">Blackjack Trainer</span>
+        <div class="account-nav" aria-label="Main navigation">
+            <button type="button" data-placeholder-page="practice" aria-current="page">♠ Practice</button>
+            <button type="button" data-placeholder-page="learn">♣ Learn</button>
+            <button type="button" data-placeholder-page="glossary">▤ Glossary</button>
+            <button type="button" data-placeholder-page="charts">▦ Charts</button>
+            <button type="button" data-placeholder-page="share">Share</button>
+        </div>
         <div class="account-actions">
             <button id="openAuthBtn" type="button">Log in</button>
             <div id="signedInActions" class="account-actions" hidden>
@@ -1156,6 +1226,25 @@
         <div id="reviewHands"></div>
     </main>
 
+    <main id="placeholderPages" hidden>
+        <section class="placeholder-page" data-placeholder-content="learn">
+            <h1>Learn</h1>
+            <p>Lessons and guided blackjack concepts will live here soon. Start with Practice to train your decisions at the table.</p>
+        </section>
+        <section class="placeholder-page" data-placeholder-content="glossary">
+            <h1>Glossary</h1>
+            <p>A quick reference for blackjack terms, table rules, and the language used throughout your training sessions.</p>
+        </section>
+        <section class="placeholder-page" data-placeholder-content="charts">
+            <h1>Charts</h1>
+            <p>Strategy charts and table references are being prepared for this space.</p>
+        </section>
+        <section class="placeholder-page" data-placeholder-content="share">
+            <h1>Share</h1>
+            <p>Shareable training summaries and progress cards will be available here soon.</p>
+        </section>
+    </main>
+
     <section id="authOverlay" class="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="authTitle" hidden>
         <div class="auth-card">
             <div class="auth-heading-row">
@@ -1209,6 +1298,7 @@
 
     <script src="blackjack-game.js"></script>
     <script src="auth.js"></script>
+    <script src="site-nav.js"></script>
 
     <footer class="credits">
         <em>
