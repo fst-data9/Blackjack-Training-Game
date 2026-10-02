@@ -26,3 +26,7 @@ function showSitePage(pageName) {
 navButtons.forEach((button) => {
     button.addEventListener("click", () => showSitePage(button.dataset.placeholderPage));
 });
+
+document.getElementById("startTrainingBtn")?.addEventListener("click", () => {
+    document.getElementById("newGameBtn")?.click();
+});
