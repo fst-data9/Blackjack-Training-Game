@@ -16,7 +16,7 @@ This is a practical checklist for deploying the blackjack trainer and PostgreSQL
 | Unbounded rate-limit memory | API memory exhaustion | Expired in-memory request buckets are pruned; authentication limits live in PostgreSQL | Implemented |
 | Information disclosure | Easier reconnaissance | `X-Powered-By` disabled, generic API errors, no stack traces returned | Implemented |
 | Database exposed publicly | Direct password attacks and data theft | Compose binds PostgreSQL to `127.0.0.1` only | Implemented locally; enforce firewall/private network in production |
-| Database superuser used by the app | Full database compromise after an app breach | Create a dedicated least-privilege application role | Deployment |
+| Database superuser used by the app | Full database compromise after an app breach | Transactional API-role provisioning, separate release credentials, and CI checks for denied DDL/migration-history access | Implemented; switch each deployed API to the new role |
 | Unencrypted traffic | Stolen passwords/cookies/database traffic | HTTPS for the website and TLS (`sslmode=verify-full`) for remote PostgreSQL | Deployment |
 | Weak/default secrets | Database or provider compromise | Secrets remain in ignored environment files | Deployment: generate unique secrets and use a secret manager |
 | Missing email ownership proof | Disposable or mistyped accounts | Add email verification before treating email addresses as trusted | Future enhancement |
@@ -34,6 +34,10 @@ This is a practical checklist for deploying the blackjack trainer and PostgreSQL
 6. Give the API a dedicated PostgreSQL role with only the required `SELECT`, `INSERT`, `UPDATE`, and `DELETE` privileges on this application's tables and sequences.
 7. Use long, unique database/provider secrets stored outside the repository, rotate them, and maintain encrypted backups.
 8. Run `npm audit --omit=dev` and apply supported runtime/package updates regularly.
+
+Follow [database/README.md](database/README.md) when separating API and migration
+credentials on an existing deployment. Do not change `POSTGRES_USER` or replace
+the existing database volume as part of that transition.
 
 ## Trust boundary
 

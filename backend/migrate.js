@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import pg from "pg";
 
-dotenv.config();
+// Migration credentials are separate from the runtime API's .env.
+dotenv.config({ path: fileURLToPath(new URL(".env.migrations", import.meta.url)) });
 
 const { Pool } = pg;
 const migrationDirectory = path.resolve(
@@ -20,8 +21,8 @@ const pool = new Pool({
   max: 1,
   connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS || 5_000),
   idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS || 30_000),
-  query_timeout: Number(process.env.DB_QUERY_TIMEOUT_MS || 6_000),
-  statement_timeout: Number(process.env.DB_STATEMENT_TIMEOUT_MS || 5_000),
+  query_timeout: Number(process.env.DB_QUERY_TIMEOUT_MS || 65_000),
+  statement_timeout: Number(process.env.DB_STATEMENT_TIMEOUT_MS || 60_000),
   application_name: "blackjack-migrations",
 });
 
@@ -103,15 +104,23 @@ async function runMigrations() {
       }
     }
 
+    // Validate the entire history before applying anything. A changed later
+    // migration must not allow earlier pending files to alter the database.
+    const latestApplied = [...applied.keys()].sort().at(-1);
     for (const migration of migrations) {
-      const recordedChecksum = applied.get(migration.filename);
-      if (recordedChecksum) {
-        if (recordedChecksum !== migration.checksum) {
-          throw new Error(
-            `Migration ${migration.filename} was changed after it was applied. ` +
-            "Create a new migration instead of editing an applied migration."
-          );
-        }
+      if (applied.has(migration.filename) && applied.get(migration.filename) !== migration.checksum) {
+        throw new Error(
+          `Migration ${migration.filename} was changed after it was applied. ` +
+          "Create a new migration instead of editing an applied migration."
+        );
+      }
+      if (!applied.has(migration.filename) && latestApplied && migration.filename < latestApplied) {
+        throw new Error(`Migration ${migration.filename} is out of order. Add a version after ${latestApplied}.`);
+      }
+    }
+
+    for (const migration of migrations) {
+      if (applied.has(migration.filename)) {
         console.log(`Already applied: ${migration.filename}`);
         continue;
       }

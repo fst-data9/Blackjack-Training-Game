@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Run pending database migrations without allocating an interactive TTY.
-podman-compose run --rm -T api npm run migrate
+# Apply migrations and refresh the API role using release-only credentials.
+podman-compose run --rm -T migrate

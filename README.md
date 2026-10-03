@@ -46,12 +46,21 @@ This is a small blackjack trainer for basic strategy practice. The browser game 
    ```sh
    cp .env.example .env
    cp backend/.env.example backend/.env
+   cp backend/.env.migrations.example backend/.env.migrations
    ```
 
-2. Start the API and database with Podman.
+   Use the same administrator credentials in `.env` and
+   `backend/.env.migrations`. The API's `backend/.env` uses a separate role and
+   password matching `DATABASE_APP_USER` / `DATABASE_APP_PASSWORD` in the
+   migration file. Restrict the secret files to permission `600`.
+
+2. Initialize the database, provision the API role, then start the API.
 
    ```sh
-   podman-compose up --build
+   podman-compose up -d postgres
+   podman-compose build api migrate
+   bash scripts/migrate.sh
+   podman-compose up -d api
    ```
 
 3. Open `http://localhost:3001` in a browser to play the game.
@@ -61,10 +70,10 @@ The API serves the browser game at the same address so secure, HttpOnly login co
 The SQL files in `database/init/` run automatically when Podman creates a new Postgres data volume. If `blackjack_pgdata` already exists, Podman will keep the current database as-is. Apply any pending migrations to an existing database with the versioned migration runner:
 
 ```sh
-podman-compose run --rm api npm run migrate
+podman-compose run --rm migrate
 ```
 
-The runner records applied files and their checksums in `schema_migrations`, prevents concurrent migration runs, and applies each pending migration transactionally. See [database/README.md](database/README.md) for the migration workflow and rules.
+The runner records applied files and their checksums in `schema_migrations`, prevents concurrent migration runs, and applies each pending migration transactionally. The release service also provisions the restricted API role. See [database/README.md](database/README.md) for the migration workflow, existing-server transition, and integration tests.
 
 ## Accounts and Google sign-in
 
