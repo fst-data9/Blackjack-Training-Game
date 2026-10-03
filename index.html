@@ -10,7 +10,6 @@
     <style>
         body {
             --account-bar-height: 58px;
-            --hero-height: clamp(120px, 19vw, 230px);
             font-family: system-ui, Arial;
             padding: 0;
             margin: 0 auto;
@@ -298,7 +297,6 @@
             position: relative;
             z-index: 10;
             width: 100%;
-            height: var(--hero-height);
             margin: 0;
             overflow: hidden;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -308,9 +306,7 @@
         .site-banner {
             display: block;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center top;
+            height: auto;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         }
 
@@ -1085,14 +1081,6 @@
                 padding: 20px;
             }
 
-            .site-banner {
-                height: 100%;
-            }
-
-            body {
-                --hero-height: clamp(110px, 27vw, 160px);
-            }
-
             .deck-recommendation {
                 order: 4;
             }
@@ -1140,10 +1128,10 @@
         <h1 class="visually-hidden">Basic Blackjack Training</h1>
         <img
             class="site-banner"
-            src="images/Blackjack-Training-Banner.png"
+            src="images/Blackjack-Training-Banner-v2.png"
             alt=""
-            width="2172"
-            height="724"
+            width="3072"
+            height="512"
             fetchpriority="high"
         />
       </header>
