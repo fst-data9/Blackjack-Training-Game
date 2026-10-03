@@ -18,15 +18,18 @@
             color: #f1f5f3;
         }
 
-        .account-bar {
-            position: fixed;
-            z-index: 20;
+        .site-chrome {
+            position: sticky;
+            z-index: 30;
             top: 0;
-            left: 0;
+        }
+
+        .account-bar {
+            position: relative;
+            z-index: 20;
             box-sizing: border-box;
             width: 100%;
             height: var(--account-bar-height);
-            transform: none;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -293,14 +296,13 @@
         }
 
         .site-header {
-            position: fixed;
+            position: relative;
             z-index: 10;
-            top: var(--account-bar-height);
-            left: 0;
             width: 100%;
             height: var(--hero-height);
             margin: 0;
             overflow: hidden;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
             background: #0b3d25;
         }
 
@@ -309,7 +311,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center;
+            object-position: center top;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         }
 
@@ -317,12 +319,12 @@
             box-sizing: border-box;
             width: min(100%, 760px);
             margin: 0 auto;
-            padding: calc(var(--account-bar-height) + var(--hero-height)) clamp(12px, 3vw, 24px) 24px;
+            padding: 0 clamp(12px, 3vw, 24px) 24px;
         }
 
         #reviewPage,
         #placeholderPages {
-            padding-top: calc(var(--account-bar-height) + var(--hero-height));
+            padding-top: 0;
         }
 
         .training-intro {
@@ -1057,10 +1059,7 @@
 
         @media (max-width: 560px) {
             .account-bar {
-                top: 0;
-                left: 0;
                 width: 100%;
-                transform: none;
                 border-right: 0;
                 border-left: 0;
                 border-radius: 0;
@@ -1119,7 +1118,8 @@
 </head>
 
 <body>
-    <nav class="account-bar" aria-label="Account navigation">
+    <div class="site-chrome">
+      <nav class="account-bar" aria-label="Account navigation">
         <span class="account-brand">Blackjack Trainer</span>
         <div class="account-nav" aria-label="Main navigation">
             <button type="button" data-placeholder-page="practice" aria-current="page">♠ Practice</button>
@@ -1135,9 +1135,9 @@
                 <button id="logoutBtn" class="logout-button" type="button">Log out</button>
             </div>
         </div>
-    </nav>
+      </nav>
 
-    <header class="site-header">
+      <header class="site-header">
         <h1 class="visually-hidden">Basic Blackjack Training</h1>
         <img
             class="site-banner"
@@ -1147,7 +1147,8 @@
             height="724"
             fetchpriority="high"
         />
-    </header>
+      </header>
+    </div>
 
     <main id="gamePage">
 
