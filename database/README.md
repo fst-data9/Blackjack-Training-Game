@@ -1,5 +1,8 @@
 # Database migrations
 
+For scheduled encrypted backups and restore checks on the existing VPS, see
+[the backup setup guide](../deploy/backups/README.md).
+
 Migration files live in `database/init` and use ordered names such as
 `005_add_example.sql`. The same files initialize a new PostgreSQL volume and are
 also applied to existing databases by the migration runner.

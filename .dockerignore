@@ -8,3 +8,6 @@
 !**/.env.example
 !**/.env.migrations.example
 **/*.log
+**/*.dump
+**/*.dump.age
+**/*.backup.key
