@@ -96,14 +96,21 @@ jobs:
       - name: Install backend dependencies
         run: npm ci --prefix backend
 
-      - name: Run database migrations
+      - name: Test fresh and existing databases, rollback, and API privileges
+        env:
+          DATABASE_TEST_ADMIN_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
+        run: npm run test:database --prefix backend
+
+      - name: Prepare database and restricted API role
         env:
           DATABASE_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
-        run: npm run migrate --prefix backend
+          DATABASE_APP_USER: blackjack_api
+          DATABASE_APP_PASSWORD: integration-runtime-password-for-tests
+        run: npm run db:prepare --prefix backend
 
       - name: Start API
         env:
-          DATABASE_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
+          DATABASE_URL: postgres://blackjack_api:integration-runtime-password-for-tests@127.0.0.1:5432/blackjack
           PORT: 3001
           NODE_ENV: test
           ALLOWED_ORIGINS: http://127.0.0.1:3001

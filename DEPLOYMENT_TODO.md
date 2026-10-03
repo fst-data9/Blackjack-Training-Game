@@ -19,7 +19,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 - [x] Add a versioned migration runner instead of relying only on PostgreSQL initialization scripts.
 - [x] Run pending migrations automatically or as an explicit release step before the new application starts.
-- [ ] Create a dedicated, least-privilege PostgreSQL role for the API.
+- [ ] Create a dedicated, least-privilege PostgreSQL role for the API on staging and production. Provisioning, separate release credentials, and privilege tests are implemented; complete the server transition in `database/README.md` before checking this off.
 - [x] Keep PostgreSQL on a private network.
 - [ ] Require certificate-verified TLS if PostgreSQL is hosted on another machine.
 - [ ] Configure encrypted automatic backups.
@@ -87,7 +87,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 - [ ] Test session ownership and anonymous-session claiming.
 - [ ] Test authentication and global rate limits.
 - [ ] Test Turnstile success, rejection, timeout, and unavailable-service behavior.
-- [ ] Test migration of both a new database and an existing database.
+- [x] Test migration of both a new database and an existing database, including repeat/concurrent runs, rollback, immutable history, and restricted API-role permissions.
 - [ ] Add browser tests for the main game, split aces, responsive layout, and account/statistics flows.
 - [ ] Run a staging smoke test after every deployment.
 
