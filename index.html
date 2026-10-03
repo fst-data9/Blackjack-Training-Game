@@ -9,7 +9,7 @@
 
     <style>
         body {
-            --account-bar-height: 48px;
+            --account-bar-height: 58px;
             --hero-height: clamp(120px, 19vw, 230px);
             font-family: system-ui, Arial;
             padding: 0;
@@ -25,6 +25,7 @@
             left: 0;
             box-sizing: border-box;
             width: 100%;
+            height: var(--account-bar-height);
             transform: none;
             display: flex;
             align-items: center;
@@ -78,6 +79,7 @@
         }
 
         .account-nav button {
+            margin: 0;
             padding: 8px 11px;
             border: 1px solid transparent;
             border-radius: 8px;
