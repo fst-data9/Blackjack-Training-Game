@@ -9,35 +9,60 @@
 
     <style>
         body {
+            --account-bar-height: 58px;
             font-family: system-ui, Arial;
-            padding: clamp(12px, 3vw, 24px);
-            max-width: 760px;
+            padding: 0;
             margin: 0 auto;
             background-color: #0f5132;
             color: #f1f5f3;
         }
 
+        .site-chrome {
+            /* Keep the bar and banner in the page flow so they scroll away together. */
+            position: static;
+        }
+
         .account-bar {
-            position: sticky;
+            position: relative;
             z-index: 20;
-            top: 0;
+            box-sizing: border-box;
+            width: 100%;
+            height: var(--account-bar-height);
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
-            margin-bottom: 14px;
-            padding: 10px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 10px;
-            background: rgba(10, 47, 32, 0.94);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-right: 0;
+            border-left: 0;
+            border-radius: 0;
+            background: rgba(12, 13, 15, 0.9);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
             backdrop-filter: blur(10px);
         }
 
         .account-brand {
-            color: #fff4cf;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #fff;
             font-weight: 800;
             letter-spacing: 0.02em;
+        }
+
+        .account-brand::before {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            background: linear-gradient(145deg, #f3d48a, #9b6b26);
+            color: #173d2d;
+            content: "♠";
+            font-size: 1.15rem;
+            line-height: 1;
         }
 
         .account-actions {
@@ -46,14 +71,49 @@
             gap: 10px;
         }
 
+        .account-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: auto;
+            margin-left: 18px;
+        }
+
+        .account-nav button {
+            margin: 0;
+            padding: 8px 11px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: #b9bdc5;
+            font: inherit;
+            font-size: 0.92rem;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        .account-nav button:hover,
+        .account-nav button[aria-current="page"] {
+            border-color: rgba(255, 255, 255, 0.06);
+            background: #1b1d21;
+            color: #fff;
+        }
+
         .account-actions button {
             margin: 0;
-            border: 1px solid #e7c66d;
-            border-radius: 8px;
-            background: #e7c66d;
-            color: #173d2d;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 9px;
+            background: #1b1d21;
+            color: #fff;
             font-weight: 800;
             cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .account-actions button:hover {
+            border-color: rgba(231, 198, 109, 0.5);
+            background: #282b30;
+            transform: translateY(-1px);
         }
 
         .account-actions .logout-button {
@@ -234,15 +294,94 @@
         }
 
         .site-header {
-            margin-bottom: 24px;
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            margin: 0;
+            overflow: hidden;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0b3d25;
         }
 
         .site-banner {
             display: block;
             width: 100%;
             height: auto;
-            border-radius: 14px;
-            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        #gamePage {
+            box-sizing: border-box;
+            width: min(100%, 760px);
+            margin: 0 auto;
+            padding: 0 clamp(12px, 3vw, 24px) 24px;
+        }
+
+        #reviewPage,
+        #placeholderPages {
+            padding-top: 0;
+        }
+
+        .training-intro {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+            padding: 16px 18px;
+            border: 1px solid rgba(231, 198, 109, 0.35);
+            border-radius: 12px;
+            background: linear-gradient(110deg, rgba(8, 63, 37, 0.94), rgba(19, 81, 50, 0.82));
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+        }
+
+        .training-intro h2 {
+            margin: 0 0 4px;
+            color: #fff4cf;
+            font-size: 1.05rem;
+        }
+
+        .training-intro p {
+            margin: 0;
+            color: #d5e2db;
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+
+        .training-intro button {
+            flex: 0 0 auto;
+            margin: 0;
+            border: 1px solid #e7c66d;
+            border-radius: 8px;
+            background: #e7c66d;
+            color: #173d2d;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .placeholder-page {
+            box-sizing: border-box;
+            width: min(100% - 32px, 760px);
+            min-height: 320px;
+            margin: 0 auto 24px;
+            padding: clamp(28px, 6vw, 56px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            background: rgba(6, 48, 29, 0.72);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+            text-align: center;
+        }
+
+        .placeholder-page h1 {
+            margin-top: 0;
+            color: #fff4cf;
+        }
+
+        .placeholder-page p {
+            max-width: 520px;
+            margin: 0 auto;
+            color: #d5e2db;
+            line-height: 1.6;
         }
 
         .visually-hidden {
@@ -915,11 +1054,19 @@
 
         @media (max-width: 560px) {
             .account-bar {
+                width: 100%;
+                border-right: 0;
+                border-left: 0;
+                border-radius: 0;
                 gap: 8px;
             }
 
             .account-brand {
                 font-size: 0.88rem;
+            }
+
+            .account-nav {
+                display: none;
             }
 
             .account-name {
@@ -932,12 +1079,6 @@
 
             .auth-card {
                 padding: 20px;
-            }
-
-            .site-banner {
-                height: clamp(140px, 44vw, 175px);
-                object-fit: cover;
-                object-position: center;
             }
 
             .deck-recommendation {
@@ -964,8 +1105,16 @@
 </head>
 
 <body>
-    <nav class="account-bar" aria-label="Account navigation">
-        <span class="account-brand">♠ Blackjack Trainer</span>
+    <div class="site-chrome">
+      <nav class="account-bar" aria-label="Account navigation">
+        <span class="account-brand">Blackjack Trainer</span>
+        <div class="account-nav" aria-label="Main navigation">
+            <button type="button" data-placeholder-page="practice" aria-current="page">♠ Practice</button>
+            <button type="button" data-placeholder-page="learn">♣ Learn</button>
+            <button type="button" data-placeholder-page="glossary">▤ Glossary</button>
+            <button type="button" data-placeholder-page="charts">▦ Charts</button>
+            <button type="button" data-placeholder-page="share">Share</button>
+        </div>
         <div class="account-actions">
             <button id="openAuthBtn" type="button">Log in</button>
             <div id="signedInActions" class="account-actions" hidden>
@@ -973,20 +1122,30 @@
                 <button id="logoutBtn" class="logout-button" type="button">Log out</button>
             </div>
         </div>
-    </nav>
+      </nav>
 
-    <main id="gamePage">
-    <header class="site-header">
+      <header class="site-header">
         <h1 class="visually-hidden">Basic Blackjack Training</h1>
         <img
             class="site-banner"
-            src="images/Blackjack-Training-Banner.png"
+            src="images/Blackjack-Training-Banner-v2.png"
             alt=""
-            width="2172"
-            height="724"
+            width="3072"
+            height="512"
             fetchpriority="high"
         />
-    </header>
+      </header>
+    </div>
+
+    <main id="gamePage">
+
+    <section class="training-intro" aria-labelledby="trainingIntroTitle">
+        <div>
+            <h2 id="trainingIntroTitle">No login required — ever! ♠️♥️</h2>
+            <p>Jump straight to the table and start sharpening your blackjack skills with no sign-up and no strings attached. Want to keep score? Create an optional account to save your stats, review past sessions, and watch your game improve over time. Play a hand, learn a little, and keep building your edge. ♦️♣️</p>
+        </div>
+        <button id="startTrainingBtn" type="button">Deal a hand</button>
+    </section>
 
     <!-- Dealer -->
     <div class="row">
@@ -1118,6 +1277,25 @@
         <div id="reviewHands"></div>
     </main>
 
+    <main id="placeholderPages" hidden>
+        <section class="placeholder-page" data-placeholder-content="learn">
+            <h1>Learn</h1>
+            <p>Lessons and guided blackjack concepts will live here soon. Start with Practice to train your decisions at the table.</p>
+        </section>
+        <section class="placeholder-page" data-placeholder-content="glossary">
+            <h1>Glossary</h1>
+            <p>A quick reference for blackjack terms, table rules, and the language used throughout your training sessions.</p>
+        </section>
+        <section class="placeholder-page" data-placeholder-content="charts">
+            <h1>Charts</h1>
+            <p>Strategy charts and table references are being prepared for this space.</p>
+        </section>
+        <section class="placeholder-page" data-placeholder-content="share">
+            <h1>Share</h1>
+            <p>Shareable training summaries and progress cards will be available here soon.</p>
+        </section>
+    </main>
+
     <section id="authOverlay" class="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="authTitle" hidden>
         <div class="auth-card">
             <div class="auth-heading-row">
@@ -1171,6 +1349,7 @@
 
     <script src="blackjack-game.js"></script>
     <script src="auth.js"></script>
+    <script src="site-nav.js"></script>
 
     <footer class="credits">
         <em>
