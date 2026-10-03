@@ -139,6 +139,34 @@ jobs:
         if: failure()
         run: cat /tmp/blackjack-api.log
 
+  database-backups:
+    name: Encrypted database backup and restore
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: blackjack_test
+          POSTGRES_PASSWORD: backup-integration-password
+          POSTGRES_DB: blackjack_backup_test
+        options: >-
+          --label com.blackjack.backup-test=true
+          --health-cmd "pg_isready -U blackjack_test -d blackjack_backup_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Install age encryption tools
+        run: sudo apt-get update && sudo apt-get install -y age
+      - name: Validate shell scripts
+        run: bash -n scripts/database-backup-common.sh scripts/database-backup.sh scripts/database-restore-test.sh tests/database-backups.sh
+      - name: Test encrypted backups, data restoration, failures, and retention
+        env:
+          BACKUP_TEST_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: bash tests/database-backups.sh
+
   deploy-staging:
     name: Deploy staging
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
@@ -146,6 +174,7 @@ jobs:
       - test
       - dependency-audit
       - integration
+      - database-backups
     runs-on: ubuntu-24.04
     environment: staging
     concurrency:
@@ -185,6 +214,7 @@ jobs:
       - test
       - dependency-audit
       - integration
+      - database-backups
     runs-on: ubuntu-24.04
     environment: production
     concurrency:

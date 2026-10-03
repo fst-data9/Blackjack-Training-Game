@@ -19,11 +19,12 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 - [x] Add a versioned migration runner instead of relying only on PostgreSQL initialization scripts.
 - [x] Run pending migrations automatically or as an explicit release step before the new application starts.
-- [ ] Create a dedicated, least-privilege PostgreSQL role for the API on staging and production. Provisioning, separate release credentials, and privilege tests are implemented; complete the server transition in `database/README.md` before checking this off.
+- [x] Create a dedicated, least-privilege PostgreSQL role for the staging API. Separate release/runtime credentials are configured; the user confirmed the staging transition is working.
+- [ ] Create a dedicated, least-privilege PostgreSQL role for the production API. Follow the server transition in `database/README.md` and verify before checking this off.
 - [x] Keep PostgreSQL on a private network.
 - [ ] Require certificate-verified TLS if PostgreSQL is hosted on another machine.
-- [ ] Configure encrypted automatic backups.
-- [ ] Perform and document a database restore test.
+- [ ] Configure encrypted automatic backups on staging and production. Encrypted streaming backup scripts, daily timers, retention, and CI tests are implemented; install/configure each server using `deploy/backups/README.md` before checking this off.
+- [ ] Perform and document a database restore test on staging and production. The isolated PostgreSQL 16 restore and failure tests pass; record each deployed server's successful restore drill before checking this off.
 - [ ] Add monitoring for database availability, storage, and connection usage.
 
 ## CI and deployment pipeline
