@@ -23,14 +23,19 @@ readonly compose=(
   -f deploy/production/docker-compose.yml
 )
 
+if [[ ! -r backend/.env.migrations ]]; then
+  echo "Create backend/.env.migrations with release credentials before deploying; see database/README.md." >&2
+  exit 1
+fi
+
 echo "Updating $expected_branch..."
 git pull --ff-only origin "$expected_branch"
 
 echo "Building the API image..."
-"${compose[@]}" build api
+"${compose[@]}" build api migrate
 
 echo "Running database migrations..."
-"${compose[@]}" run --rm api npm run migrate
+"${compose[@]}" run --rm migrate
 
 echo "Starting production services..."
 "${compose[@]}" --profile production up -d

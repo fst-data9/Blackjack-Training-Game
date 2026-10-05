@@ -1,0 +1,13 @@
+.git
+.agents
+.codex
+.aws
+**/node_modules
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.migrations.example
+**/*.log
+**/*.dump
+**/*.dump.age
+**/*.backup.key

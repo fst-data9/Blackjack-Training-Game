@@ -20,13 +20,15 @@ version control:
 
 - `/opt/blackjack/.env`
 - `/opt/blackjack/backend/.env`
+- `/opt/blackjack/backend/.env.migrations`
 
-Keep both files at permission `600`.
+Keep all three files at permission `600`. Before upgrading an existing server,
+follow the [database role transition](../../database/README.md#existing-staging-or-production-server-transition).
 
 `backend/.env` must include production values similar to:
 
 ```dotenv
-DATABASE_URL=postgres://blackjack_production:REPLACE_WITH_SECRET@postgres:5432/blackjack_production
+DATABASE_URL=postgres://blackjack_production_api:REPLACE_WITH_API_SECRET_AT_LEAST_24_CHARACTERS@postgres:5432/blackjack_production
 PORT=3001
 NODE_ENV=production
 ALLOWED_ORIGINS=https://blackjack-trainer.co
@@ -36,8 +38,8 @@ TRUST_PROXY_HOPS=1
 REQUIRE_SIGNUP_CAPTCHA=false
 ```
 
-The root `.env` must use matching database settings and a unique production
-volume name:
+The root `.env` retains the administrator settings and a unique production
+volume name (keep the current values when upgrading an existing database):
 
 ```dotenv
 POSTGRES_DB=blackjack_production
@@ -45,6 +47,20 @@ POSTGRES_USER=blackjack_production
 POSTGRES_PASSWORD=REPLACE_WITH_SECRET
 POSTGRES_VOLUME_NAME=blackjack_production_pgdata
 ```
+
+`backend/.env.migrations` supplies owner credentials only to the release step:
+
+```dotenv
+DATABASE_URL=postgres://blackjack_production:REPLACE_WITH_SECRET@postgres:5432/blackjack_production
+DATABASE_APP_USER=blackjack_production_api
+DATABASE_APP_PASSWORD=REPLACE_WITH_API_SECRET_AT_LEAST_24_CHARACTERS
+DB_QUERY_TIMEOUT_MS=65000
+DB_STATEMENT_TIMEOUT_MS=60000
+```
+
+Use the same API password here and in `backend/.env`, and keep the administrator
+password matching the root `.env`. The release service applies migrations and
+refreshes restricted API grants before the application starts.
 
 The `production` GitHub environment must contain separate secrets:
 

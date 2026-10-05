@@ -3,6 +3,12 @@
 backend/.env
 .env.local
 backend/.env.local
+backend/.env.migrations
+
+# Local backup artifacts and encryption identities
+*.dump
+*.dump.age
+*.backup.key
 
 # node
 node_modules
