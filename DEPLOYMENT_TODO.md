@@ -20,11 +20,11 @@ This checklist tracks the work required to move the Blackjack Training Game from
 - [x] Add a versioned migration runner instead of relying only on PostgreSQL initialization scripts.
 - [x] Run pending migrations automatically or as an explicit release step before the new application starts.
 - [x] Create a dedicated, least-privilege PostgreSQL role for the staging API. Separate release/runtime credentials are configured; the user confirmed the staging transition is working.
-- [ ] Create a dedicated, least-privilege PostgreSQL role for the production API. Follow the server transition in `database/README.md` and verify before checking this off.
+- [x] Create a dedicated, least-privilege PostgreSQL role for the production API. Verified on 2026-10-05: restricted login and application-table reads, runtime credential switch, health check, application smoke checks, and no database permission errors.
 - [x] Keep PostgreSQL on a private network.
 - [ ] Require certificate-verified TLS if PostgreSQL is hosted on another machine.
-- [ ] Configure encrypted automatic backups on staging and production. Encrypted streaming backup scripts, daily timers, retention, and CI tests are implemented; install/configure each server using `deploy/backups/README.md` before checking this off.
-- [ ] Perform and document a database restore test on staging and production. The isolated PostgreSQL 16 restore and failure tests pass; record each deployed server's successful restore drill before checking this off.
+- [x] Configure encrypted automatic backups on staging and production. Staging setup was user-confirmed; production setup was verified on 2026-10-05, including a successful systemd backup, daily timer, verified offsite archives/key, recovery configuration copies, and temporary server-key cleanup. Retention is 30 days; ongoing offsite copies remain an operations task.
+- [x] Perform and document a database restore test on staging and production. Staging restore was user-confirmed; production pre-transition and post-transition restores passed on 2026-10-05, with both generated databases removed. Evidence is recorded in private operations notes.
 - [ ] Add monitoring for database availability, storage, and connection usage.
 
 ## CI and deployment pipeline
@@ -53,14 +53,14 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## Security configuration
 
-- [ ] Create a Cloudflare Turnstile widget for the production hostname.
-- [ ] Configure `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `TURNSTILE_EXPECTED_HOSTNAME`.
-- [ ] Set `REQUIRE_SIGNUP_CAPTCHA=true` in production.
-- [ ] Configure the Google OAuth production origin and client ID if Google sign-in is enabled.
-- [ ] Verify secure `__Host-` authentication cookies over the deployed HTTPS connection.
-- [ ] Confirm CSP, HSTS, CORS, Origin checks, and rate limiting in staging.
-- [ ] Add secret rotation and incident-response procedures.
-- [ ] Schedule regular dependency and container vulnerability scans.
+- [ ] Create a Cloudflare Turnstile widget for the production hostname. Provider-account setup remains manual; exact widget settings are documented in `deploy/security/README.md`.
+- [ ] Configure `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `TURNSTILE_EXPECTED_HOSTNAME`. The private configuration helper and validation are implemented; apply real environment-specific keys on each server.
+- [ ] Set `REQUIRE_SIGNUP_CAPTCHA=true` in production. The helper enforces this after keys are provided; verify a real browser signup before marking complete.
+- [ ] Configure the Google OAuth production origin and client ID if Google sign-in is enabled. Both deployed environments reported Google disabled on 2026-10-05; optional setup is documented.
+- [ ] Verify secure `__Host-` authentication cookies over the deployed HTTPS connection. Production-mode issuance, expiry, and logout are covered by automated integration tests; real browser acceptance remains a deployment check.
+- [ ] Confirm CSP, HSTS, CORS, Origin checks, and rate limiting in staging. Current staging HTTPS/header/CORS/blocked-write baseline passed on 2026-10-05; production-mode integration tests cover rate limits. Complete deployed verification after configuration.
+- [x] Add secret rotation and incident-response procedures. See `deploy/security/operations.md`.
+- [ ] Schedule regular dependency and container vulnerability scans. Weekly/manual npm and container scans are implemented in `.github/workflows/security-scan.yml`; scheduling activates after merging into the default branch.
 
 ## Monitoring and operations
 
@@ -83,11 +83,11 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## Test coverage
 
-- [ ] Test registration, login, logout, cookie expiry, and invalid credentials automatically.
+- [x] Test registration, login, logout, cookie expiry, and invalid credentials automatically. Production-mode security integration tests also verify host-cookie flags and restricted database writes.
 - [ ] Test Google authentication with an appropriate test strategy.
-- [ ] Test session ownership and anonymous-session claiming.
-- [ ] Test authentication and global rate limits.
-- [ ] Test Turnstile success, rejection, timeout, and unavailable-service behavior.
+- [x] Test session ownership and anonymous-session claiming. Tests verify claiming an anonymous session and reject cross-account claiming/statistics/hand writes.
+- [x] Test authentication and global rate limits. Tests cover signup IP limits, login identity limits across different IPs and API restarts, and global Retry-After/window expiry.
+- [x] Test Turnstile success, rejection, timeout, and unavailable-service behavior. Tests also cover hostname/action mismatches, replay/expiry responses, malformed responses, and log redaction.
 - [x] Test migration of both a new database and an existing database, including repeat/concurrent runs, rollback, immutable history, and restricted API-role permissions.
 - [ ] Add browser tests for the main game, split aces, responsive layout, and account/statistics flows.
 - [ ] Run a staging smoke test after every deployment.

@@ -1,0 +1,60 @@
+name: Weekly security scans
+
+on:
+  schedule:
+    - cron: "15 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-scans-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  dependency-audit:
+    name: Production dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci --prefix backend
+      - run: npm audit --prefix backend --omit=dev --audit-level=high
+
+  container-scan:
+    name: Container scan (${{ matrix.target }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [api, postgres, caddy]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Select or build the image
+        env:
+          SCAN_TARGET: ${{ matrix.target }}
+        run: |
+          case "$SCAN_TARGET" in
+            api)
+              docker build --pull -f backend/Dockerfile -t blackjack-security-scan:api .
+              echo "SCAN_IMAGE=blackjack-security-scan:api" >> "$GITHUB_ENV"
+              ;;
+            postgres) echo "SCAN_IMAGE=postgres:16" >> "$GITHUB_ENV" ;;
+            caddy) echo "SCAN_IMAGE=caddy:2-alpine" >> "$GITHUB_ENV" ;;
+          esac
+      - name: Scan image for high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          image-ref: ${{ env.SCAN_IMAGE }}
+          scanners: vuln
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: false

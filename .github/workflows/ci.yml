@@ -39,6 +39,11 @@ jobs:
       - name: Validate backend and migrations
         run: npm run check --prefix backend
 
+      - name: Test security configuration and Turnstile failure handling
+        run: |
+          npm run test:security --prefix backend
+          python3 -m unittest discover -s tests -p 'test_security_configuration.py'
+
       - name: Run blackjack simulation
         run: npm run test:sim
 
@@ -100,6 +105,11 @@ jobs:
         env:
           DATABASE_TEST_ADMIN_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
         run: npm run test:database --prefix backend
+
+      - name: Test production cookies, CAPTCHA, origin checks, rate limits, and restricted writes
+        env:
+          DATABASE_TEST_ADMIN_URL: postgres://blackjack:integration-password@127.0.0.1:5432/blackjack
+        run: npm run test:security:integration --prefix backend
 
       - name: Prepare database and restricted API role
         env:

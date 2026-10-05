@@ -11,6 +11,7 @@ COPY backend ./backend
 COPY index.html blackjack-game.js auth.js ./
 COPY images ./images
 COPY database ./database
+COPY scripts/verify-security.mjs ./scripts/verify-security.mjs
 
 WORKDIR /app/backend
 

@@ -90,6 +90,10 @@ deployments cannot run at the same time.
 
 ## Verification
 
+For Turnstile setup and HTTPS/browser security verification, follow
+[the security configuration guide](../security/README.md). Use a separate staging
+widget and run the configuration helper with `--environment staging`.
+
 ```sh
 curl --fail https://staging.blackjack-trainer.co/api/health
 docker compose -f docker-compose.yml -f deploy/staging/docker-compose.yml ps

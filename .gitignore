@@ -4,6 +4,7 @@ backend/.env
 .env.local
 backend/.env.local
 backend/.env.migrations
+backend/.env.security.*
 
 # Local backup artifacts and encryption identities
 *.dump
@@ -15,6 +16,9 @@ node_modules
 backend/node_modules
 npm-debug.log
 backend/npm-debug.log
+
+# Python configuration-helper caches
+__pycache__/
 
 # docker
 *.log

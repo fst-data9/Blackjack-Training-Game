@@ -8,6 +8,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { OAuth2Client } from "google-auth-library";
 import helmet from "helmet";
+import { readSecurityConfig } from "./security-config.js";
+import { signupCaptcha } from "./turnstile.js";
+import { logSecurityError } from "./security-log.js";
 
 // Load environment variables from .env
 dotenv.config();
@@ -15,25 +18,14 @@ dotenv.config();
 const app = express();
 app.disable("x-powered-by");
 
-const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
-if (Number.isInteger(trustProxyHops) && trustProxyHops > 0) {
+const security = readSecurityConfig(process.env);
+const { trustProxyHops, allowedOrigins, allowFileOrigin, rateLimitWindowMs, rateLimitMax } = security;
+if (trustProxyHops > 0) {
   app.set("trust proxy", trustProxyHops);
 }
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS ||
-  "http://localhost:3001,http://127.0.0.1:3001")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
-const allowFileOrigin = process.env.ALLOW_FILE_ORIGIN === "true";
-
-if (process.env.NODE_ENV === "production") {
-  if (!process.env.ALLOWED_ORIGINS) throw new Error("ALLOWED_ORIGINS is required in production");
-  if (allowFileOrigin) throw new Error("ALLOW_FILE_ORIGIN must be false in production");
-}
-
 app.use(helmet({
+  frameguard: { action: "deny" },
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   strictTransportSecurity: process.env.NODE_ENV === "production" ? undefined : false,
@@ -92,8 +84,6 @@ function rejectCrossSiteWrites(req, res, next) {
 
 app.use("/api", rejectCrossSiteWrites);
 
-const rateLimitWindowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
-const rateLimitMax = Number(process.env.RATE_LIMIT_MAX || 120);
 const requestCounts = new Map();
 
 function rateLimit(req, res, next) {
@@ -146,19 +136,9 @@ const AUTH_COOKIE = process.env.NODE_ENV === "production" ? "__Host-bj_auth" : "
 const AUTH_TOKEN_TTL_DAYS = 30;
 const googleClientId = process.env.GOOGLE_CLIENT_ID || "";
 const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
-const turnstileSiteKey = process.env.TURNSTILE_SITE_KEY || "";
-const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY || "";
-const requireSignupCaptcha = process.env.REQUIRE_SIGNUP_CAPTCHA === "true";
-const expectedTurnstileHostname = process.env.TURNSTILE_EXPECTED_HOSTNAME || "";
+const { siteKey: turnstileSiteKey, secretKey: turnstileSecretKey } = security.turnstile;
 const DUMMY_PASSWORD_HASH = `pbkdf2_sha256$${PASSWORD_ITERATIONS}$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`;
 const sessionIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-if (Boolean(turnstileSiteKey) !== Boolean(turnstileSecretKey)) {
-  throw new Error("TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY must be configured together");
-}
-if (requireSignupCaptcha && (!turnstileSecretKey || !expectedTurnstileHostname)) {
-  throw new Error("Required signup CAPTCHA needs both Turnstile keys and TURNSTILE_EXPECTED_HOSTNAME");
-}
 
 function normalizeEmail(value) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -213,7 +193,7 @@ function authRateLimit({ bucket, ip, identity }) {
       }
       return next();
     } catch (err) {
-      console.error("Authentication rate limiter failed:", err);
+      logSecurityError("authentication_rate_limiter_failed", err);
       return res.status(503).json({ error: "Authentication is temporarily unavailable" });
     }
   };
@@ -234,50 +214,14 @@ const googleRateLimit = authRateLimit({
   ip: { maximum: 30, windowSeconds: 15 * 60 },
 });
 
-async function verifySignupCaptcha(req, res, next) {
-  if (!turnstileSecretKey) {
-    if (requireSignupCaptcha) {
-      return res.status(503).json({ error: "Account creation is temporarily unavailable" });
-    }
-    return next();
-  }
-
-  const token = req.body?.turnstileToken;
-  if (typeof token !== "string" || token.length < 1 || token.length > 2048) {
-    return res.status(400).json({ error: "Complete the human verification challenge" });
-  }
-
-  try {
-    const body = new URLSearchParams({
-      secret: turnstileSecretKey,
-      response: token,
-      remoteip: req.ip || "",
-      idempotency_key: crypto.randomUUID(),
-    });
-    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body,
-      signal: AbortSignal.timeout(5_000),
-    });
-    const result = await response.json();
-    const validHostname = !expectedTurnstileHostname || result.hostname === expectedTurnstileHostname;
-    if (!response.ok || !result.success || result.action !== "register" || !validHostname) {
-      return res.status(400).json({ error: "Human verification failed. Please try again." });
-    }
-    return next();
-  } catch (err) {
-    console.error("Turnstile verification failed:", err);
-    return res.status(503).json({ error: "Human verification is temporarily unavailable" });
-  }
-}
+const verifySignupCaptcha = signupCaptcha(security.turnstile);
 
 const authRateCleanup = setInterval(() => {
   Promise.all([
     pool.query("DELETE FROM auth_rate_limits WHERE window_started_at < now() - interval '2 days'"),
     pool.query("DELETE FROM auth_tokens WHERE expires_at <= now()"),
   ])
-    .catch((err) => console.error("Failed to clean authentication rate limits:", err));
+    .catch((err) => logSecurityError("authentication_rate_cleanup_failed", err));
 }, 60 * 60_000);
 authRateCleanup.unref();
 
@@ -478,7 +422,7 @@ app.get("/api/health", async (req, res) => {
       time: result.rows[0].now,
     });
   } catch (err) {
-    console.error(err);
+    logSecurityError("health_check_failed", err);
     res.status(500).json({ ok: false });
   }
 });
@@ -488,6 +432,7 @@ app.get("/api/auth/config", (req, res) => {
   res.json({
     googleClientId: googleClientId || null,
     turnstileSiteKey: turnstileSecretKey ? turnstileSiteKey || null : null,
+    signupCaptchaRequired: security.turnstile.required,
   });
 });
 
@@ -516,7 +461,7 @@ app.post("/api/auth/register", registerRateLimit, verifySignupCaptcha, async (re
     return res.status(201).json({ user: publicUser(result.rows[0]) });
   } catch (err) {
     if (err.code === "23505") return res.status(409).json({ error: "Unable to create an account with those details" });
-    console.error("Registration failed:", err);
+    logSecurityError("registration_failed", err);
     return res.status(err.status || 500).json({ error: err.status ? err.message : "Unable to create account" });
   }
 });
@@ -543,7 +488,7 @@ app.post("/api/auth/login", loginRateLimit, async (req, res) => {
     await createLogin(req, res, user);
     return res.json({ user: publicUser(user) });
   } catch (err) {
-    console.error("Login failed:", err);
+    logSecurityError("login_failed", err);
     return res.status(err.status || 500).json({ error: err.status ? err.message : "Unable to sign in" });
   }
 });
@@ -609,7 +554,7 @@ app.post("/api/auth/google", googleRateLimit, async (req, res) => {
     await createLogin(req, res, user);
     return res.json({ user: publicUser(user) });
   } catch (err) {
-    console.error("Google login failed:", err);
+    logSecurityError("google_login_failed", err);
     return res.status(err.status || 401).json({ error: err.status ? err.message : "Google sign-in failed" });
   }
 });
@@ -625,7 +570,7 @@ app.post("/api/auth/logout", authenticateOptional, async (req, res) => {
     setAuthCookie(res, "", 0);
     return res.json({ success: true });
   } catch (err) {
-    console.error("Logout failed:", err);
+    logSecurityError("logout_failed", err);
     return res.status(500).json({ error: "Unable to sign out" });
   }
 });
@@ -695,7 +640,7 @@ app.post("/api/hands", authenticateOptional, async (req, res) => {
       createdAt: result.rows[0].created_at,
     });
   } catch (err) {
-    console.error("Failed to insert hand:", err);
+    logSecurityError("hand_insert_failed", err);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -724,7 +669,7 @@ app.post("/api/sessions", authenticateOptional, async (req, res) => {
     if (result.rowCount === 0) return res.status(409).json({ error: "Session belongs to another account" });
     res.status(201).json({ success: true });
   } catch (err) {
-    console.error("Failed to insert session:", err);
+    logSecurityError("session_insert_failed", err);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -776,7 +721,7 @@ app.post("/api/session-stats", authenticateOptional, async (req, res) => {
     );
     return res.json({ success: true });
   } catch (err) {
-    console.error("Failed to update session stats:", err);
+    logSecurityError("session_stats_update_failed", err);
     return res.status(500).json({ error: "Database error" });
   }
 });
@@ -819,7 +764,7 @@ app.get("/api/users/me/stats", authenticateOptional, requireUser, async (req, re
     );
     return res.json({ stats, history: historyResult.rows });
   } catch (err) {
-    console.error("Failed to load user stats:", err);
+    logSecurityError("user_stats_load_failed", err);
     return res.status(500).json({ error: "Database error" });
   }
 });
@@ -837,8 +782,10 @@ app.get("/auth.js", (req, res) => res.sendFile(path.join(frontendRoot, "auth.js"
 app.use("/images", express.static(path.join(frontendRoot, "images"), { dotfiles: "deny" }));
 
 app.use((err, req, res, next) => {
-  console.error("Unhandled request error:", err);
-  if (res.headersSent) return next(err);
+  logSecurityError("request_failed", err);
+  if (res.headersSent) return res.destroy();
+  if (err.type === "entity.parse.failed") return res.status(400).json({ error: "Malformed JSON" });
+  if (err.type === "entity.too.large") return res.status(413).json({ error: "Request body too large" });
   return res.status(500).json({ error: "Internal server error" });
 });
 
@@ -860,7 +807,7 @@ async function shutdown(signal) {
       await pool.end();
       process.exit(0);
     } catch (err) {
-      console.error("Failed to close PostgreSQL pool:", err);
+      logSecurityError("database_shutdown_failed", err);
       process.exit(1);
     }
   });
