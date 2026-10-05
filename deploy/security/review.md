@@ -55,3 +55,15 @@ These results do not establish that deployed images are vulnerability-free.
 Google remains disabled unless explicitly configured. Provider-console setup and
 real browser acceptance remain unchecked in the deployment checklist. Follow
 [README.md](README.md) for the exact settings and commands.
+
+## Production verification follow-up, 2026-10-05
+
+The initial deployed verifier passed the main site's checks but encountered a
+TLS error on the final www request after Caddy restarted. A subsequent public
+request completed successfully and returned the configured 301 apex redirect.
+The checker also incorrectly required 308: Caddy's `permanent` keyword uses 301.
+The corrected checker accepts either permanent status, still requires the exact
+destination including path/query, and passed all production checks under Node 24.
+This correction is prepared separately for review; the deployed image still
+contains the original checker until the correction is released. Production
+browser acceptance remains pending.

@@ -65,7 +65,7 @@ for (const route of ["/.env", "/backend/.env", "/backend/.env.migrations", "/.gi
 }
 if (environment === "production") {
   const response = await request("/api/auth/config?security-check=1", {}, "https://www.blackjack-trainer.co");
-  assert.equal(response.status, 308, "www must redirect to the canonical hostname");
+  assert.ok([301, 308].includes(response.status), "www must permanently redirect to the canonical hostname");
   assert.equal(response.headers.get("location"), `${origin}/api/auth/config?security-check=1`);
   console.log("Canonical www redirect passed");
 }
