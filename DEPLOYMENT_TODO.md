@@ -53,14 +53,14 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## Security configuration
 
-- [ ] Create a Cloudflare Turnstile widget for the production hostname. Provider-account setup remains manual; exact widget settings are documented in `deploy/security/README.md`.
-- [ ] Configure `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `TURNSTILE_EXPECTED_HOSTNAME`. The private configuration helper and validation are implemented; apply real environment-specific keys on each server.
-- [ ] Set `REQUIRE_SIGNUP_CAPTCHA=true` in production. The helper enforces this after keys are provided; verify a real browser signup before marking complete.
+- [x] Create a Cloudflare Turnstile widget for the production hostname. Separate staging/production widgets were created and real browser signup passed on both environments on 2026-10-05.
+- [x] Configure `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `TURNSTILE_EXPECTED_HOSTNAME`. Applied privately using the helper on both servers; configuration checks and real signup passed on 2026-10-05. Keys remain outside Git and are saved in separate 1Password entries.
+- [x] Set `REQUIRE_SIGNUP_CAPTCHA=true` in production. Saved settings and running public configuration were verified; production browser signup passed on 2026-10-05.
 - [ ] Configure the Google OAuth production origin and client ID if Google sign-in is enabled. Both deployed environments reported Google disabled on 2026-10-05; optional setup is documented.
-- [ ] Verify secure `__Host-` authentication cookies over the deployed HTTPS connection. Production-mode issuance, expiry, and logout are covered by automated integration tests; real browser acceptance remains a deployment check.
-- [ ] Confirm CSP, HSTS, CORS, Origin checks, and rate limiting in staging. Current staging HTTPS/header/CORS/blocked-write baseline passed on 2026-10-05; production-mode integration tests cover rate limits. Complete deployed verification after configuration.
+- [x] Verify secure `__Host-` authentication cookies over the deployed HTTPS connection. User confirmed Secure/HttpOnly, SameSite=Lax, Path=/, retained login after refresh, logout, and login/statistics on staging and production on 2026-10-05; expiry/revocation are also covered by integration tests.
+- [x] Confirm CSP, HSTS, CORS, Origin checks, and rate limiting in staging. Deployed HTTPS/header/CORS/blocked-write checks passed on 2026-10-05; a bounded public-GET check returned HTTP 429 on request 121 with Retry-After. Authentication limits and restart persistence are covered by isolated production-mode tests.
 - [x] Add secret rotation and incident-response procedures. See `deploy/security/operations.md`.
-- [ ] Schedule regular dependency and container vulnerability scans. Weekly/manual npm and container scans are implemented in `.github/workflows/security-scan.yml`; scheduling activates after merging into the default branch.
+- [x] Schedule regular dependency and container vulnerability scans. Weekly/manual npm and API/PostgreSQL/Caddy scans were merged into main via PR #34 on 2026-10-05. Scan findings/results still require ongoing review; scheduling does not establish that deployed images are vulnerability-free.
 
 ## Monitoring and operations
 
