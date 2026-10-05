@@ -1,7 +1,9 @@
 # Security release review
 
-Prepared locally on 2026-10-05. No production deployment, credential rotation,
-provider-account change, or customer-data change was performed.
+Prepared locally on 2026-10-05 and subsequently released by the user through
+staging and production. The user configured provider keys privately and ran
+server commands; the agent's deployed checks used public endpoints only. No
+credential values or customer records are included in this report.
 
 ## What to review
 
@@ -21,7 +23,7 @@ provider-account change, or customer-data change was performed.
 - Credential rotation and incident procedures are documented in
   [operations.md](operations.md).
 
-## Verification
+## Initial local verification
 
 - Node 24 syntax/migration checks and seven security unit tests passed.
 - Ten Python configuration-helper tests passed, including private review/apply,
@@ -39,19 +41,47 @@ provider-account change, or customer-data change was performed.
 - Staging's current public HTTPS/header/CORS/blocked-write checks passed with the
   explicit option allowing its currently unconfigured Turnstile widget.
 
-The weekly container scan workflow has been validated but has not run on GitHub.
-These results do not establish that deployed images are vulnerability-free.
+The weekly container scan workflow was validated and later merged into main.
+No container scan findings were reviewed in this session. These results do not
+establish that deployed images are vulnerability-free.
 
-## Remaining before acceptance
+## Deployed acceptance, 2026-10-05
 
-1. Review and release the code through staging, then production.
-2. Create separate real Turnstile widgets in your Cloudflare account; apply each
-   environment's keys privately using the helper. It enables required CAPTCHA.
-3. Run the deployed HTTPS verification script, then confirm real browser signup,
-   login, gameplay/statistics, logout, and secure cookie acceptance.
-4. Refresh private recovery configuration copies. Weekly schedules become active
-   once their workflow is on the GitHub default branch.
+- Security implementation `66ce8ee` reached dev through PR #33 (`5045b9f`) and
+  main through PR #34 (`991fe6f`). The user reported both deployment jobs green.
+- Separate real Turnstile widgets and 1Password API Credential entries were
+  created for staging and production. The private helper's apply/check succeeded
+  on each server; it saved rollback settings and preserved database credentials.
+- The user recreated the APIs and production Caddy. Health and deployed security
+  endpoint checks passed; the production www check passed using the corrected
+  verifier described below.
+- The user confirmed real signup with successful Turnstile, login persisting
+  after refresh, Secure/HttpOnly cookie flags, SameSite=Lax, Path=/, gameplay,
+  logout, and statistics retained after signing back in on both environments.
+- A bounded staging check using only public configuration GETs reached HTTP 429
+  on request 121 with a positive Retry-After. Authentication-specific limits and
+  restart persistence were tested on isolated databases, not live accounts.
+- Google remains disabled. Weekly scans are configured on the default branch;
+  their findings still need review.
 
-Google remains disabled unless explicitly configured. Provider-console setup and
-real browser acceptance remain unchecked in the deployment checklist. Follow
-[README.md](README.md) for the exact settings and commands.
+## Remaining release and recovery work
+
+1. Review and release the verifier correction below through dev, then main,
+   and rerun the verifier included in each deployed image.
+2. Refresh private offsite recovery configuration copies; older copies predate
+   the Turnstile settings and must be retained as historical rollback material.
+3. Review the first weekly/manual container scan results and address findings.
+
+Follow [README.md](README.md) for the exact settings and commands.
+
+## Production verification follow-up, 2026-10-05
+
+The initial deployed verifier passed the main site's checks but encountered a
+TLS error on the final www request after Caddy restarted. A subsequent public
+request completed successfully and returned the configured 301 apex redirect.
+The checker also incorrectly required 308: Caddy's `permanent` keyword uses 301.
+The corrected checker accepts either permanent status, still requires the exact
+destination including path/query, and passed all production checks under Node 24.
+This correction is prepared separately for review; the deployed image still
+contains the original checker until the correction is released. The user has
+since confirmed the production browser acceptance checks listed above.
