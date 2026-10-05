@@ -40,6 +40,11 @@ echo "Running database migrations..."
 echo "Starting production services..."
 "${compose[@]}" --profile production up -d
 
+# The Caddyfile is a file bind mount. Git may replace its inode, so recreate the
+# proxy to load the reviewed file instead of reloading an old mounted inode.
+echo "Loading the production proxy configuration..."
+"${compose[@]}" --profile production up -d --no-deps --force-recreate caddy
+
 echo "Service status:"
 "${compose[@]}" ps
 

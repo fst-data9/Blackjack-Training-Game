@@ -26,6 +26,11 @@ This is a practical checklist for deploying the blackjack trainer and PostgreSQL
 
 ## Production requirements
 
+See [the security setup and verification guide](deploy/security/README.md) for
+the private configuration helper, environment-specific Turnstile/Google setup,
+automated checks, and browser acceptance. Rotation and incident procedures are
+documented in [the operations guide](deploy/security/operations.md).
+
 1. Serve only over HTTPS and set `NODE_ENV=production`.
 2. Set the exact public origin in `ALLOWED_ORIGINS`; keep `ALLOW_FILE_ORIGIN=false`.
 3. If a reverse proxy is directly in front of the API, set `TRUST_PROXY_HOPS=1`. Do not increase this unless the proxy chain is understood, because client IPs drive abuse controls.
