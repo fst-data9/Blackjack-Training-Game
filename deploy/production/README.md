@@ -12,8 +12,14 @@ CNAME for `www`:
 www   CNAME   blackjack-trainer.co
 ```
 
-Caddy serves both `blackjack-trainer.co` and `www.blackjack-trainer.co` over
-HTTPS.
+Caddy serves `blackjack-trainer.co` over HTTPS and redirects `www` to the apex,
+preserving the path/query. Authentication origins and Turnstile therefore use
+the canonical `blackjack-trainer.co` hostname.
+
+Follow [the security configuration guide](../security/README.md) to prepare
+Turnstile settings, verify secure cookies/headers/origin checks, and optionally
+enable Google sign-in. The helper preserves database credentials and creates
+a private rollback copy before changing runtime security settings.
 
 The production server checkout must use `main` and provide these files outside
 version control:

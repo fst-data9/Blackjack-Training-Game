@@ -1,4 +1,8 @@
-blackjack-trainer.co, www.blackjack-trainer.co {
+www.blackjack-trainer.co {
+    redir https://blackjack-trainer.co{uri} permanent
+}
+
+blackjack-trainer.co {
     encode gzip
     log {
         output stdout

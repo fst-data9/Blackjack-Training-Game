@@ -8,12 +8,14 @@
   },
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check migrate.js && node --check provision-db-role.js && node migrate.js --check",
+    "check": "node --check server.js && node --check security-config.js && node --check security-log.js && node --check turnstile.js && node --check migrate.js && node --check provision-db-role.js && node migrate.js --check",
     "migrate": "node migrate.js",
     "migrate:check": "node migrate.js --check",
     "db:provision": "node provision-db-role.js",
     "db:prepare": "node migrate.js && node provision-db-role.js",
-    "test:database": "node --test --test-concurrency=1 tests/database.test.js"
+    "test:database": "node --test --test-concurrency=1 tests/database.test.js",
+    "test:security": "node --test tests/security.test.js",
+    "test:security:integration": "node --test --test-concurrency=1 tests/security-integration.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
