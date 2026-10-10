@@ -1,4 +1,5 @@
 import express from "express";
+import { registerSeoRoutes } from "./seo-pages.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import pg from "pg";
@@ -776,6 +777,7 @@ app.use("/api", (req, res) => {
 // Serve the small frontend from the API origin so HttpOnly login cookies work
 // locally in the same way they will on the deployed website.
 const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+registerSeoRoutes(app, frontendRoot);
 app.get("/", (req, res) => res.sendFile(path.join(frontendRoot, "index.html")));
 app.get("/blackjack-game.js", (req, res) => res.sendFile(path.join(frontendRoot, "blackjack-game.js")));
 app.get("/auth.js", (req, res) => res.sendFile(path.join(frontendRoot, "auth.js")));
