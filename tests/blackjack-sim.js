@@ -2,14 +2,33 @@
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
+import { runGameplayScenarios } from "./gameplay-scenarios.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const gamePath = path.join(rootDir, "blackjack-game.js");
 
 const roundCount = Number(process.argv[2] || 1000);
+const seed = Number(process.argv[3] || 123456789);
+assert.ok(Number.isInteger(roundCount) && roundCount > 0, "Round count must be a positive integer");
+assert.ok(Number.isInteger(seed) && seed >= 0 && seed <= 0xffffffff, "Seed must be a uint32");
+function randomGenerator(initialSeed) {
+    let value = initialSeed >>> 0;
+    return () => {
+        value = (Math.imul(value, 1664525) + 1013904223) >>> 0;
+        return value / 0x100000000;
+    };
+}
+const actionRandom = randomGenerator(seed ^ 0x9e3779b9);
 const maxActionsPerRound = 80;
+
+function scoreRecordedCards(cards) {
+    const ranks = cards.map(card => card.slice(0, -1));
+    const low = ranks.reduce((sum, rank) => sum + (rank === "A" ? 1 : ["J", "Q", "K"].includes(rank) ? 10 : Number(rank)), 0);
+    return low + (ranks.includes("A") && low + 10 <= 21 ? 10 : 0);
+}
 
 class ClassList {
     constructor() {
@@ -63,6 +82,18 @@ class Element {
     }
 
     focus() {}
+
+    set disabled(value) {
+        this._disabled = Boolean(value);
+    }
+
+    get disabled() {
+        return this._disabled;
+    }
+
+    setAttribute(name, value) {
+        this[name] = String(value);
+    }
 
     querySelectorAll(selector) {
         const matches = [];
@@ -127,7 +158,9 @@ function makeDocument() {
         "noInsuranceBtn"
     ];
 
-    for (const id of ids) elements.set(id, new Element("div", id));
+    const html = fs.readFileSync(path.join(rootDir, "index.html"), "utf8");
+    for (const [, id] of html.matchAll(/\bid="([^"]+)"/g)) elements.set(id, new Element("div", id));
+    for (const id of ids) assert.ok(elements.has(id), `Missing real HTML element: ${id}`);
 
     for (const id of [
         "newGameBtn",
@@ -147,8 +180,7 @@ function makeDocument() {
 
     return {
         getElementById(id) {
-            if (!elements.has(id)) elements.set(id, new Element("div", id));
-            return elements.get(id);
+            return elements.get(id) || null;
         },
         createElement(tagName) {
             return new Element(tagName);
@@ -159,14 +191,21 @@ function makeDocument() {
 
 function createHarness() {
     const document = makeDocument();
+    const recordedHands = [];
+    let uuidIndex = 0;
+    const gameMath = Object.create(Math);
+    gameMath.random = randomGenerator(seed);
     const context = {
         console,
         document,
         location: { hostname: "localhost", protocol: "file:" },
         navigator: { userAgent: "blackjack-sim" },
-        crypto: { randomUUID: () => "sim-session" },
-        fetch: async () => ({ ok: true, text: async () => "", json: async () => ({}) }),
-        Math,
+        crypto: { randomUUID: () => `00000000-0000-4000-8000-${String(++uuidIndex).padStart(12, "0")}` },
+        fetch: async (url, options) => {
+            if (url.endsWith("/api/hands")) recordedHands.push(JSON.parse(options.body));
+            return { ok: true, text: async () => "", json: async () => ({}) };
+        },
+        Math: gameMath,
         setTimeout,
         clearTimeout,
         window: {}
@@ -178,7 +217,11 @@ function createHarness() {
 
     return {
         context,
+        recordedHands,
         elements: document.elements,
+        inspect(expression) {
+            return vm.runInContext(expression, context);
+        },
         click(id) {
             document.getElementById(id).click();
         },
@@ -187,6 +230,36 @@ function createHarness() {
         },
         buttons() {
             return context.window.__BJ_TEST__.buttons();
+        },
+        dealCards(cards) {
+            // Inject the shoe in the VM, keeping deterministic fixtures out of production hooks.
+            context.fixtureCards = cards.map(([rank, suit = "♠"]) => ({ rank, suit }));
+            vm.runInContext("deck = fixtureCards.slice().reverse(); shoeNeedsShuffle = false; cutCardRemaining = 0;", context);
+            this.click("newGameBtn");
+        },
+        assertSettlement() {
+            const state = this.state();
+            const records = recordedHands.filter((hand) => hand.roundIndex === state.roundIndex);
+            assert.equal(records.length, state.handCount, `Round ${state.roundIndex}: each hand must be recorded exactly once`);
+            assert.deepEqual(records.map((hand) => hand.handIndex).sort((a, b) => a - b),
+                Array.from({ length: state.handCount }, (_, index) => index));
+            for (const record of records) {
+                const dollars = record.betCents / 100;
+                const expectedNet = record.outcome === "blackjack" ? dollars + Math.floor(dollars / 2)
+                    : record.outcome === "surrender" ? -dollars + Math.floor(dollars / 2)
+                    : record.outcome === "win" ? dollars : record.outcome === "push" ? 0 : -dollars;
+                assert.equal(record.payoutCents, expectedNet * 100, "Saved hand payout differs from monetary rules");
+                if (!["surrender", "blackjack"].includes(record.outcome)) {
+                    const player = scoreRecordedCards(record.playerCards);
+                    const dealer = scoreRecordedCards(record.dealerCards);
+                    const expectedOutcome = player > 21 ? "lose" : dealer > 21 || player > dealer ? "win" : player === dealer ? "push" : "lose";
+                    assert.equal(record.outcome, expectedOutcome, "Outcome differs from recorded cards");
+                }
+            }
+            if (state.handCount > 1) {
+                assert.equal(vm.runInContext("playerHands.every(hand => hand._done)", context), true,
+                    `Round ${state.roundIndex}: ended with an unfinished split hand`);
+            }
         }
     };
 }
@@ -211,9 +284,30 @@ function assertRoundState(state, round, step) {
     }
 }
 
+function assertActionAvailability(game) {
+    const state = game.state();
+    const buttons = game.buttons();
+    const hand = game.inspect("currentHand()");
+    const finished = Boolean(hand._done);
+    const playable = state.inRound && !state.awaitingInsurance && !finished;
+    const bet = game.inspect("playerHands ? bets[activeHandIndex] : currentBet");
+    const value = card => card.rank === "A" ? 11 : ["J", "Q", "K"].includes(card.rank) ? 10 : Number(card.rank);
+    const expected = {
+        deal: !state.inRound,
+        hit: playable,
+        stand: playable,
+        surrender: playable && state.handCount === 1 && !game.inspect("didSplit") && hand.length === 2,
+        double: playable && hand.length === 2 && state.bankroll >= bet,
+        split: playable && hand.length === 2 && value(hand[0]) === value(hand[1]) && state.bankroll >= bet && state.handCount < 4,
+        insurance: state.awaitingInsurance && Math.floor(state.currentBet / 2) > 0 && state.bankroll >= Math.floor(state.currentBet / 2),
+        noInsurance: state.awaitingInsurance,
+    };
+    assert.deepEqual({ ...buttons }, expected, "Button availability differs from independent gameplay rules");
+}
+
 function chooseAction(buttons) {
     if (buttons.insurance || buttons.noInsurance) {
-        return Math.random() < 0.25 && buttons.insurance ? "insuranceBtn" : "noInsuranceBtn";
+        return actionRandom() < 0.25 && buttons.insurance ? "insuranceBtn" : "noInsuranceBtn";
     }
 
     const weighted = [];
@@ -224,8 +318,72 @@ function chooseAction(buttons) {
     if (buttons.stand) weighted.push("standBtn", "standBtn");
 
     if (weighted.length === 0) return null;
-    return weighted[Math.floor(Math.random() * weighted.length)];
+    return weighted[Math.floor(actionRandom() * weighted.length)];
 }
+
+// Random play can miss rare card sequences and cannot establish the intended
+// transition rules. Run fixed regression scenarios on every simulation run.
+function splitAceFixture(firstCard, secondCard, extraCards = []) {
+    const game = createHarness();
+    game.elements.get("betInput").value = "20";
+    game.dealCards([["A"], ["9"], ["A", "♥"], ["8"], [firstCard], [secondCard], ...extraCards.map(rank => [rank])]);
+    assert.equal(game.buttons().split, true);
+    game.click("splitBtn");
+    return game;
+}
+
+function assertPlayingHand(game, index) {
+    assert.equal(game.state().inRound, true, "A split round must remain active while another hand needs play");
+    assert.equal(game.state().activeHandIndex, index);
+    assert.equal(game.buttons().deal, false);
+    assert.equal(game.buttons().hit, true);
+    assert.equal(game.buttons().stand, true);
+    assert.equal(game.recordedHands.length, 0, "Do not settle before the remaining hands finish");
+    assert.ok(game.elements.get("dealerCards").querySelectorAll("img")[1].src.endsWith("/RED_BACK.svg"));
+}
+
+function assertAceSettlement(game, bankroll, outcomes) {
+    assert.equal(game.state().inRound, false);
+    game.assertSettlement();
+    assert.equal(game.state().bankroll, bankroll);
+    assert.deepEqual(game.recordedHands.map(hand => hand.outcome), outcomes);
+    assert.ok(game.recordedHands.every(hand => hand.didSplit && hand.outcome !== "blackjack"),
+        "Split 21 pays as a regular hand, never a natural blackjack");
+    const stats = game.context.window.__BJ_TEST__.stats();
+    assert.equal(stats.hands, 2);
+    assert.equal(stats.actualNet, bankroll - 1000);
+}
+
+const firstAce21 = splitAceFixture("K", "5", ["5"]);
+assertPlayingHand(firstAce21, 1);
+firstAce21.click("hitBtn");
+assertAceSettlement(firstAce21, 1040, ["win", "win"]);
+
+const secondAce21 = splitAceFixture("5", "Q");
+assertPlayingHand(secondAce21, 0);
+secondAce21.click("standBtn");
+assertAceSettlement(secondAce21, 1000, ["lose", "win"]);
+
+const bothAces21 = splitAceFixture("10", "J");
+assertAceSettlement(bothAces21, 1040, ["win", "win"]);
+
+const hitAce21 = splitAceFixture("5", "6", ["5"]);
+assertPlayingHand(hitAce21, 0);
+hitAce21.click("hitBtn");
+assertPlayingHand(hitAce21, 1);
+hitAce21.click("standBtn");
+assertAceSettlement(hitAce21, 1020, ["win", "push"]);
+
+const bustAce = splitAceFixture("9", "6", ["5", "K"]);
+assertPlayingHand(bustAce, 0);
+bustAce.click("hitBtn"); // Soft 20 becomes hard 15.
+assertPlayingHand(bustAce, 0);
+bustAce.click("hitBtn");
+assertPlayingHand(bustAce, 1);
+bustAce.click("standBtn");
+assertAceSettlement(bustAce, 980, ["lose", "push"]);
+
+const scenarioCoverage = runGameplayScenarios(createHarness);
 
 const game = createHarness();
 const startingBankroll = Math.max(1000, roundCount * 20);
@@ -234,6 +392,7 @@ game.context.window.__BJ_TEST__.setBankroll(startingBankroll);
 let completed = 0;
 let maxHandsSeen = 1;
 let insurancePrompts = 0;
+let expectedHands = 0;
 
 for (let round = 1; round <= roundCount; round++) {
     if (!game.buttons().deal) {
@@ -241,7 +400,8 @@ for (let round = 1; round <= roundCount; round++) {
     }
 
     const previousRoundIndex = game.state().roundIndex;
-    game.elements.get("betInput").value = "2";
+    const decisionsBeforeRound = game.context.__BJ_TEST__.stats().decisions;
+    game.elements.get("betInput").value = String([1, 2, 3, 25][round % 4]);
     game.click("newGameBtn");
 
     if (game.state().roundIndex === previousRoundIndex) {
@@ -249,12 +409,18 @@ for (let round = 1; round <= roundCount; round++) {
     }
 
     let sawInsuranceThisRound = false;
-    for (let step = 1; step <= maxActionsPerRound; step++) {
+    for (let step = 1; step <= maxActionsPerRound + 1; step++) {
         const state = game.state();
         assertRoundState(state, round, step);
+        assertActionAvailability(game);
+        const decisions = game.inspect("strategyDecisions");
+        assert.equal(new Set(decisions.map(item => item.id)).size, decisions.length, "Duplicate strategy decision IDs");
+        assert.equal(decisions.filter(item => item.action).length,
+            game.context.__BJ_TEST__.stats().decisions - decisionsBeforeRound,
+            "Decision records and decision count disagree");
         if (state.inRound) {
             const dealerImages = game.elements.get("dealerCards").querySelectorAll("img");
-            if (dealerImages[1] && !dealerImages[1].src.endsWith("/RED_BACK.svg")) {
+            if (!dealerImages[1] || !dealerImages[1].src.endsWith("/RED_BACK.svg")) {
                 throw new Error(`Round ${round}, step ${step}: dealer hole card was visible during play`);
             }
         }
@@ -262,9 +428,15 @@ for (let round = 1; round <= roundCount; round++) {
         if (state.awaitingInsurance) sawInsuranceThisRound = true;
 
         if (!state.inRound) {
+            game.assertSettlement();
+            expectedHands += state.handCount;
             completed += 1;
             if (sawInsuranceThisRound) insurancePrompts += 1;
             break;
+        }
+
+        if (step > maxActionsPerRound) {
+            throw new Error(`Round ${round}: exceeded ${maxActionsPerRound} actions`);
         }
 
         const action = chooseAction(game.buttons());
@@ -274,9 +446,6 @@ for (let round = 1; round <= roundCount; round++) {
 
         game.click(action);
 
-        if (step === maxActionsPerRound) {
-            throw new Error(`Round ${round}: exceeded ${maxActionsPerRound} actions`);
-        }
     }
 }
 
@@ -285,8 +454,8 @@ const stats = game.context.window.__BJ_TEST__.stats();
 if (stats.rounds !== roundCount) {
     throw new Error(`Stats recorded ${stats.rounds} rounds, expected ${roundCount}`);
 }
-if (stats.hands < completed) {
-    throw new Error(`Stats recorded fewer hands (${stats.hands}) than completed rounds (${completed})`);
+if (stats.hands !== expectedHands) {
+    throw new Error(`Stats recorded ${stats.hands} hands, expected ${expectedHands}`);
 }
 if (stats.actualNet !== finalState.bankroll - startingBankroll) {
     throw new Error(
@@ -328,6 +497,9 @@ console.log(
     JSON.stringify(
         {
             ok: true,
+            deterministicScenarios: 5 + Object.values(scenarioCoverage).filter(value => value === true).length,
+            scenarioCoverage,
+            seed,
             roundsRequested: roundCount,
             roundsCompleted: completed,
             finalBankroll: finalState.bankroll,

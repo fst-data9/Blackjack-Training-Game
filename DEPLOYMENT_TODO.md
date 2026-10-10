@@ -89,7 +89,7 @@ This checklist tracks the work required to move the Blackjack Training Game from
 - [x] Test authentication and global rate limits. Tests cover signup IP limits, login identity limits across different IPs and API restarts, and global Retry-After/window expiry.
 - [x] Test Turnstile success, rejection, timeout, and unavailable-service behavior. Tests also cover hostname/action mismatches, replay/expiry responses, malformed responses, and log redaction.
 - [x] Test migration of both a new database and an existing database, including repeat/concurrent runs, rollback, immutable history, and restricted API-role permissions.
-- [ ] Add browser tests for the main game, split aces, responsive layout, and account/statistics flows.
+- [ ] Add browser tests for the main game, split aces, responsive layout, and account/statistics flows. Initial desktop/mobile Chromium coverage now tests split aces, served navigation, login-dialog focus/error handling, login/logout controls, session/user statistics tabs, hints/review and four-hand layout with mocked API data; full account/statistics persistence and additional browser engines remain open.
 - [ ] Run a staging smoke test after every deployment.
 
 ## Product trust boundary

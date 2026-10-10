@@ -779,6 +779,7 @@ const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 app.get("/", (req, res) => res.sendFile(path.join(frontendRoot, "index.html")));
 app.get("/blackjack-game.js", (req, res) => res.sendFile(path.join(frontendRoot, "blackjack-game.js")));
 app.get("/auth.js", (req, res) => res.sendFile(path.join(frontendRoot, "auth.js")));
+app.get("/site-nav.js", (req, res) => res.sendFile(path.join(frontendRoot, "site-nav.js")));
 app.use("/images", express.static(path.join(frontendRoot, "images"), { dotfiles: "deny" }));
 
 app.use((err, req, res, next) => {
