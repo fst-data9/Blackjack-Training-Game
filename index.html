@@ -4,7 +4,16 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Basic Blackjack Training</title>
+    <title>Free Blackjack Trainer | Practice Basic Strategy</title>
+    <meta name="description" content="Practise blackjack basic strategy free with instant decision feedback, learning lessons, a glossary and strategy charts. No login required." />
+    <link rel="canonical" href="https://blackjack-trainer.co/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Blackjack Trainer" />
+    <meta property="og:title" content="Free Blackjack Trainer | Practice Basic Strategy" />
+    <meta property="og:description" content="Practise blackjack basic strategy free with instant decision feedback, learning lessons, a glossary and strategy charts. No login required." />
+    <meta property="og:url" content="https://blackjack-trainer.co/" />
+    <meta property="og:image" content="https://blackjack-trainer.co/images/Blackjack-Training-Banner-v2.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" href="images/tab_icon.png" />
 
     <style>
@@ -79,7 +88,7 @@
             margin-left: 18px;
         }
 
-        .account-nav button {
+        .account-nav :is(button, a) {
             margin: 0;
             padding: 8px 11px;
             border: 1px solid transparent;
@@ -88,12 +97,13 @@
             color: #b9bdc5;
             font: inherit;
             font-size: 0.92rem;
+            text-decoration: none;
             font-weight: 650;
             cursor: pointer;
         }
 
-        .account-nav button:hover,
-        .account-nav button[aria-current="page"] {
+        .account-nav :is(button, a):hover,
+        .account-nav :is(button, a)[aria-current="page"] {
             border-color: rgba(255, 255, 255, 0.06);
             background: #1b1d21;
             color: #fff;
@@ -1113,10 +1123,10 @@
       <nav class="account-bar" aria-label="Account navigation">
         <span class="account-brand">Blackjack Trainer</span>
         <div class="account-nav" aria-label="Main navigation">
-            <button type="button" data-placeholder-page="practice" aria-current="page">♠ Practice</button>
-            <button type="button" data-placeholder-page="learn">♣ Learn</button>
-            <button type="button" data-placeholder-page="glossary">▤ Glossary</button>
-            <button type="button" data-placeholder-page="charts">▦ Charts</button>
+            <a href="/" data-placeholder-page="practice" aria-current="page">♠ Practice</a>
+            <a href="/learn" data-placeholder-page="learn">♣ Learn</a>
+            <a href="/glossary" data-placeholder-page="glossary">▤ Glossary</a>
+            <a href="/charts" data-placeholder-page="charts">▦ Charts</a>
             <button type="button" data-placeholder-page="share">Share</button>
         </div>
         <div class="account-actions">
@@ -1294,7 +1304,7 @@
             <h1 id="chartsHeading" tabindex="-1">Charts</h1>
             <div id="chartsContent"></div>
         </section>
-        <section class="placeholder-page" data-placeholder-content="share">
+        <section class="placeholder-page" data-placeholder-content="share" hidden>
             <h1>Share</h1>
             <p>Shareable training summaries and progress cards will be available here soon.</p>
         </section>
@@ -1358,6 +1368,7 @@
     <script src="strategy-charts.js"></script>
 
     <footer class="credits">
+        <p><a href="/">Practice blackjack</a> · <a href="/learn">Learn blackjack</a> · <a href="/glossary">Blackjack glossary</a> · <a href="/charts">Basic strategy charts</a></p>
         <em>
             Playing cards thanks to<br>
             Vectorized Playing Cards 1.3 –

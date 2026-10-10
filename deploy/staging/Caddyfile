@@ -1,4 +1,5 @@
 staging.blackjack-trainer.co {
+    header X-Robots-Tag "noindex, nofollow"
     encode gzip
     log {
         output stdout
