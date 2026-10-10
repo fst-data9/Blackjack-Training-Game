@@ -144,6 +144,8 @@ let awaitingInsurance = false;
 let insuranceBet = 0;
 let strategyDecisions = [];
 let activeStrategyDecisionId = null;
+let roundOpeningBankroll = bankroll;
+let roundResultTimer = null;
 const reviewHands = [];
 const archivedReviewRounds = new Set();
 
@@ -152,6 +154,12 @@ const dealerCardsEl = document.getElementById("dealerCards");
 const dealerTotalEl = document.getElementById("dealerTotal");
 const playerHandsUIEl = document.getElementById("playerHandsUI");
 const statusEl = document.getElementById("status");
+const roundResultEl = document.getElementById("roundResult");
+const roundResultIconEl = document.getElementById("roundResultIcon");
+const roundResultTitleEl = document.getElementById("roundResultTitle");
+const roundResultNetEl = document.getElementById("roundResultNet");
+const roundResultDetailsEl = document.getElementById("roundResultDetails");
+const roundResultStrategyEl = document.getElementById("roundResultStrategy");
 const strategyLogEl = document.getElementById("strategyLog");
 const statsRoundsEl = document.getElementById("statsRounds");
 const statsHandsEl = document.getElementById("statsHands");
@@ -221,11 +229,58 @@ function cardImageSrc(card) {
     return `images/cards/${card.rank}${suitCode(card.suit)}.svg`;
 }
 function setStatus(msg, result = null) {
+    if (!result) hideRoundResult();
     statusEl.textContent = msg;
     for (const type of ["win", "lose", "push", "mixed"]) {
         statusEl.classList.toggle(`result-${type}`, result === type);
     }
     statusEl.classList.toggle("round-result", Boolean(result));
+}
+function hideRoundResult() {
+    clearTimeout(roundResultTimer);
+    roundResultTimer = null;
+    roundResultEl.hidden = true;
+}
+function showRoundResult(outcomes, resultType) {
+    hideRoundResult();
+    const decisions = strategyDecisions.filter((decision) => decision.action);
+    const correct = decisions.filter((decision) => decision.result === "correct").length;
+    const mistakes = decisions.length - correct;
+    const strategyState = decisions.length === 0 ? "neutral" : mistakes === 0 ? "correct" : "incorrect";
+    const strategySummary = decisions.length === 0
+        ? "No decisions needed"
+        : mistakes === 0
+            ? `All decisions correct · ${correct}/${decisions.length}`
+            : `${mistakes} ${mistakes === 1 ? "move" : "moves"} to review · ${correct}/${decisions.length} correct`;
+
+    roundResultEl.className = `round-result-toast result-${resultType}`;
+    roundResultIconEl.textContent = { win: "↑", lose: "↓", push: "=", mixed: "↔" }[resultType];
+    roundResultTitleEl.textContent = outcomes.length > 1 ? "Split results" : {
+        win: "You won!", blackjack: "Blackjack!", lose: "You lost", push: "Push", surrender: "Surrendered"
+    }[outcomes[0]];
+    const net = bankroll - roundOpeningBankroll;
+    roundResultNetEl.textContent = `${net > 0 ? "+" : ""}${formatMoney(net)}`;
+    roundResultDetailsEl.hidden = outcomes.length === 1;
+    roundResultDetailsEl.textContent = [
+        ["won", outcomes.filter((outcome) => outcome === "win" || outcome === "blackjack").length],
+        ["lost", outcomes.filter((outcome) => outcome === "lose").length],
+        ["pushed", outcomes.filter((outcome) => outcome === "push").length],
+        ["surrendered", outcomes.filter((outcome) => outcome === "surrender").length]
+    ].filter(([, count]) => count > 0).map(([label, count]) => `${count} ${label}`).join(" · ");
+    roundResultStrategyEl.className = `round-result-strategy strategy-${strategyState}`;
+    roundResultStrategyEl.textContent = strategySummary;
+
+    // Keep the summary available after the toast fades, with one polite live
+    // announcement through the existing status region. Never move focus.
+    const summary = document.createElement("span");
+    summary.className = "round-strategy-summary";
+    summary.textContent = ` ${strategySummary}`;
+    statusEl.appendChild(summary);
+    roundResultEl.hidden = false;
+    // Consecutive opening blackjacks can hide and show the toast in one event,
+    // before a paint. Give each new result its full animation duration.
+    for (const animation of roundResultEl.getAnimations?.() || []) animation.currentTime = 0;
+    roundResultTimer = setTimeout(hideRoundResult, 3500);
 }
 function resultTypeForOutcome(outcome) {
     if (outcome === "win" || outcome === "blackjack") return "win";
@@ -413,6 +468,7 @@ function showSessionStats() {
 }
 
 function clearSessionStats() {
+    hideRoundResult();
     sessionStats.rounds = 0;
     sessionStats.hands = 0;
     sessionStats.decisions = 0;
@@ -1117,6 +1173,7 @@ function endRound(message, outcome = "lose") {
     activeStrategyDecisionId = null;
     renderStrategyLog();
     archiveRoundForReview({ 1: outcome });
+    showRoundResult([outcome], resultTypeForOutcome(outcome));
 }
 
 function checkImmediateOutcomes() {
@@ -1192,6 +1249,8 @@ function startNewGame() {
         return;
     }
 
+    hideRoundResult();
+    roundOpeningBankroll = bankroll;
     roundIndex += 1;
     sessionStats.rounds += 1;
     updateStatsUI();
@@ -1553,6 +1612,7 @@ function settleSplitHands() {
     }
     setStatus(summary.join(" | "), resultType);
     archiveRoundForReview(reviewOutcomes);
+    showRoundResult(outcomes, resultType);
 }
 
 

@@ -674,6 +674,105 @@
             }
         }
 
+        .round-strategy-summary {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.86rem;
+        }
+
+        .round-result-toast {
+            --result-accent: #8de1b0;
+            position: fixed;
+            z-index: 30;
+            top: max(16px, env(safe-area-inset-top));
+            right: max(16px, env(safe-area-inset-right));
+            box-sizing: border-box;
+            width: min(340px, calc(100vw - 32px));
+            padding: 16px;
+            border: 1px solid var(--result-accent);
+            border-radius: 14px;
+            background: #10291f;
+            color: #f1f5f3;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+            animation: roundToast 3.5s ease both;
+        }
+
+        .round-result-toast.result-lose { --result-accent: #ffb0a6; }
+        .round-result-toast.result-push { --result-accent: #e7c66d; }
+        .round-result-toast.result-mixed { --result-accent: #a9d4f5; }
+
+        .round-result-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .round-result-icon {
+            display: grid;
+            flex: 0 0 40px;
+            height: 40px;
+            place-items: center;
+            border: 1px solid var(--result-accent);
+            border-radius: 50%;
+            color: var(--result-accent);
+            font-size: 1.65rem;
+            font-weight: 800;
+        }
+
+        .round-result-label {
+            color: #bdcdc5;
+            font-size: 0.64rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .round-result-title {
+            margin-top: 2px;
+            color: var(--result-accent);
+            font-size: 1.35rem;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .round-result-net {
+            margin-left: auto;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .round-result-net strong {
+            display: block;
+            margin-top: 2px;
+            font-size: 1.05rem;
+        }
+
+        .round-result-details {
+            margin-top: 10px;
+            color: #d5e2db;
+            font-size: 0.82rem;
+        }
+
+        .round-result-strategy {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 0.84rem;
+            font-weight: 650;
+            line-height: 1.4;
+        }
+
+        .round-result-strategy.strategy-correct { color: #8de1b0; }
+        .round-result-strategy.strategy-incorrect { color: #ffe09b; }
+        .round-result-strategy.strategy-neutral { color: #bdcdc5; }
+
+        @keyframes roundToast {
+            0% { opacity: 0; transform: translateY(-8px); }
+            6%, 90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-4px); }
+        }
+
         .strategy-log {
             margin-top: 10px;
         }
@@ -1044,6 +1143,10 @@
                 transition: none;
                 animation: none;
             }
+
+            .round-result-toast {
+                animation: none;
+            }
         }
 
         .hand-panel.inactive {
@@ -1152,6 +1255,24 @@
     </div>
 
     <main id="gamePage">
+
+    <!-- The existing status region announces both summaries. This visual toast
+         lets every click pass through and does not take keyboard focus. -->
+    <div id="roundResult" class="round-result-toast" aria-hidden="true" hidden>
+        <div class="round-result-heading">
+            <span id="roundResultIcon" class="round-result-icon"></span>
+            <div>
+                <div class="round-result-label">Round complete</div>
+                <div id="roundResultTitle" class="round-result-title"></div>
+            </div>
+            <div class="round-result-net">
+                <span class="round-result-label">Round net</span>
+                <strong id="roundResultNet"></strong>
+            </div>
+        </div>
+        <div id="roundResultDetails" class="round-result-details" hidden></div>
+        <div id="roundResultStrategy" class="round-result-strategy"></div>
+    </div>
 
     <section class="training-intro" aria-labelledby="trainingIntroTitle">
         <div>
