@@ -68,6 +68,22 @@ test("both split aces at 21 settle without leaving controls stuck", async ({ pag
 
 test("navigation and introductory deal button work through served scripts", async ({ page }) => {
     await expect(page.locator(".account-nav")).toBeVisible();
+    const header = await page.locator(".site-chrome").boundingBox();
+    expect(header.height).toBeLessThanOrEqual(page.viewportSize().width <= 780 ? 105 : 60);
+    if (page.viewportSize().width <= 560) {
+        const intro = await page.locator(".training-intro").boundingBox();
+        expect(intro.y + intro.height).toBeLessThan(190);
+        for (const button of await page.locator(".account-nav [data-placeholder-page]").all()) {
+            const box = await button.boundingBox();
+            expect(box.x).toBeGreaterThanOrEqual(0);
+            expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width);
+            expect(box.height).toBeGreaterThanOrEqual(44);
+        }
+    }
+    await page.locator('[data-placeholder-page="glossary"]').focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#glossaryHeading")).toBeFocused();
+    await expect(page.locator("#glossarySearch")).toBeVisible();
     await page.locator('[data-placeholder-page="learn"]').click();
     await expect(page.locator("#gamePage")).toBeHidden();
     await expect(page.locator('[data-placeholder-content="learn"]')).toBeVisible();

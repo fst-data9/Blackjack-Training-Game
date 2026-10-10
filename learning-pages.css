@@ -62,9 +62,13 @@
 .chart-action:hover { filter: brightness(1.12); }
 .chart-legend > span { padding: 6px 9px; border: 1px solid #426451; border-radius: 6px; color: #fff4cf; font-size: .8rem; }
 @media (max-width: 780px) {
-    .account-bar { flex-wrap: wrap; box-sizing: border-box; height: auto; min-height: 58px; }
+    .account-bar { flex-wrap: wrap; box-sizing: border-box; height: auto; min-height: 58px; gap: 0 8px; padding: 4px 12px; }
+    .account-actions button { min-height: 44px; }
     .account-actions { margin-left: auto; }
-    .account-nav { display: flex; order: 3; flex: 1 0 100%; width: 100%; min-width: 0; margin: 4px 0 0; overflow-x: auto; }
-    .account-nav button { flex: 0 0 auto; min-height: 44px; }
+    .account-nav { display: flex; order: 3; flex: 1 0 100%; width: 100%; min-width: 0; margin: 0; gap: 0; overflow-x: auto; }
+    .account-nav :is(button, a) { display: flex; align-items: center; justify-content: center; box-sizing: border-box; flex: 1 0 auto; min-height: 44px; padding: 8px; font-size: .85rem; }
     .learning-page { padding: 22px 16px; }
+}
+@media (max-width: 360px) {
+    .account-nav :is(button, a) { padding-inline: 4px; font-size: .75rem; }
 }
