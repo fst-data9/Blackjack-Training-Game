@@ -68,6 +68,8 @@ test("both split aces at 21 settle without leaving controls stuck", async ({ pag
 
 test("navigation and introductory deal button work through served scripts", async ({ page }) => {
     await expect(page.locator(".account-nav")).toBeVisible();
+    const header = await page.locator(".site-chrome").boundingBox();
+    expect(header.height).toBeLessThanOrEqual(page.viewportSize().width <= 780 ? 105 : 60);
     if (page.viewportSize().width <= 560) {
         const intro = await page.locator(".training-intro").boundingBox();
         expect(intro.y + intro.height).toBeLessThan(190);

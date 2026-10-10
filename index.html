@@ -27,7 +27,7 @@
         }
 
         .site-chrome {
-            /* Keep the bar and banner in the page flow so they scroll away together. */
+            /* Keep the shared header in the page flow so it scrolls away. */
             position: static;
         }
 
@@ -301,25 +301,6 @@
             color: #67766f;
             text-align: center;
             font-size: 0.86rem;
-        }
-
-        .site-header {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            margin: 0;
-            overflow: hidden;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: #0b3d25;
-        }
-
-        .site-banner {
-            display: block;
-            width: 100%;
-            height: auto;
-            max-height: 140px;
-            object-fit: contain;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         }
 
         #gamePage {
@@ -1169,10 +1150,6 @@
         }
 
         @media (max-width: 560px) {
-            .site-banner {
-                display: none;
-            }
-
             .account-bar {
                 width: 100%;
                 border-right: 0;
@@ -1229,7 +1206,8 @@
 </head>
 
 <body>
-    <div class="site-chrome">
+    <header class="site-chrome">
+      <h1 class="visually-hidden">Basic Blackjack Training</h1>
       <nav class="account-bar" aria-label="Account navigation">
         <span class="account-brand">Blackjack Trainer</span>
         <div class="account-nav" aria-label="Main navigation">
@@ -1248,18 +1226,7 @@
         </div>
       </nav>
 
-      <header class="site-header">
-        <h1 class="visually-hidden">Basic Blackjack Training</h1>
-        <img
-            class="site-banner"
-            src="images/Blackjack-Training-Banner-v2.png"
-            alt=""
-            width="3072"
-            height="512"
-            fetchpriority="high"
-        />
-      </header>
-    </div>
+    </header>
 
     <main id="gamePage">
 
