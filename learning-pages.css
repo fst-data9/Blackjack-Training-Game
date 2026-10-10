@@ -1,0 +1,70 @@
+[hidden] { display: none !important; }
+.learning-page { width: min(100% - 32px, 1040px); text-align: left; }
+.learning-page > h1 { font-size: clamp(2rem, 5vw, 3rem); }
+.learning-content > h2 { color: #fff4cf; font-size: 1.5rem; }
+.learning-content a { color: #f5d36f; }
+.learning-content :is(button, select, a, .chart-scroll):focus-visible { outline: 3px solid #f5d36f; outline-offset: 3px; }
+.learning-page .learning-note { max-width: none; margin: 16px 0; }
+.learning-content { text-align: left; }
+.learning-content .learning-eyebrow { display: block; margin: 0 0 10px; color: #e7c66d; font-size: .72rem; font-weight: 800; letter-spacing: .12em; }
+.learning-content h1 { font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.12; margin-bottom: 14px; }
+.learning-content .learning-lead { max-width: 580px; margin: 0 0 28px; font-size: 1.05rem; }
+.lesson-grid { display: grid; gap: 10px; margin-bottom: 28px; }
+.lesson-card, .glossary-card { padding: 18px; border: 1px solid #426451; border-radius: 12px; background: #103b29; }
+.lesson-card summary { display: flex; align-items: center; gap: 14px; cursor: pointer; color: #fff4cf; font-size: 1.06rem; font-weight: 700; }
+.lesson-card summary::after { content: '+'; margin-left: auto; color: #e7c66d; font-size: 1.4rem; }
+.lesson-card[open] summary::after { content: '−'; }
+.lesson-number { color: #e7c66d; font-size: .8rem; }
+.learning-content .lesson-card p { margin: 15px 0 0; max-width: none; }
+.learning-content .lesson-tip { padding: 12px; border-left: 3px solid #e7c66d; background: #184932; color: #fff4cf; font-size: .9rem; }
+.learning-quiz { border: 1px solid #a48d52; border-radius: 16px; padding: clamp(18px, 4vw, 28px); background: radial-gradient(ellipse at top, #285c3d, #0b2c20); }
+.learning-quiz h2 { margin: 0 0 12px; color: #fff4cf; font-size: 1.6rem; }
+.learning-content .quiz-rules { margin: 0 0 16px; font-size: .88rem; }
+.learning-content .quiz-progress { margin: 0 0 18px; color: #e7c66d; font-size: .85rem; }
+.quiz-table { display: grid; grid-template-columns: 1.4fr 1fr; align-items: center; gap: 12px; margin-bottom: 22px; }
+.quiz-table > div { padding: 20px 12px; background: #09281c; border-radius: 10px; text-align: center; }
+.quiz-table .quiz-hand { display: block; margin-bottom: 9px; color: #fff8e5; font-size: clamp(1.7rem, 6vw, 2.5rem); }
+.quiz-table > h3 { grid-column: 1 / -1; line-height: 1.5; color: #fff4cf; }
+.quiz-choices, .glossary-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.learning-content .learning-button { min-height: 44px; padding: 10px 16px; margin: 0; border: 1px solid #80987b; border-radius: 8px; background: #183e2c; color: #fff4cf; font: inherit; font-weight: 700; cursor: pointer; }
+.learning-content .learning-button:hover:not(:disabled), .learning-content .learning-button[aria-pressed='true'] { background: #e7c66d; border-color: #e7c66d; color: #173d2d; }
+.learning-content .learning-button:disabled { opacity: .65; cursor: default; }
+.learning-content :is(button, summary, input):focus-visible { outline: 3px solid #f5d36f; outline-offset: 4px; }
+.learning-content .quiz-feedback { margin: 18px 0; min-height: 1.4em; }
+.quiz-feedback[data-correct='true'] { color: #c2f1c4; }
+.quiz-feedback[data-correct='false'] { color: #fff4cf; }
+.glossary-label { display: block; margin-bottom: 8px; font-weight: 700; color: #fff4cf; }
+.glossary-search { box-sizing: border-box; width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #81967b; border-radius: 9px; background: #09281c; color: #fff; font: inherit; min-height: 48px; }
+.glossary-search::placeholder { color: #b8cec0; }
+.learning-content .glossary-count { margin: 18px 0; font-size: .85rem; }
+.glossary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.glossary-card h2 { margin: 0 0 10px; color: #fff4cf; font-size: 1.16rem; }
+.learning-content .glossary-card p { margin: 0; font-size: .92rem; }
+.glossary-empty { grid-column: 1 / -1; }
+@media (max-width: 520px) { .glossary-grid { grid-template-columns: 1fr; } .quiz-choices .learning-button { flex: 1 1 28%; } .lesson-card { padding: 15px; } }
+.learning-toolbar, .chart-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 20px 0; }
+.learning-toolbar label { color: #fff4cf; font-weight: 700; }
+.learning-toolbar select { padding: 10px; border: 1px solid #80987b; border-radius: 8px; background: #09281c; color: #fff4cf; font: inherit; min-height: 44px; }
+.learning-content .learning-note { max-width: none; margin: 16px 0; padding: 14px; background: #184932; border-left: 3px solid #e7c66d; font-size: .9rem; }
+.learning-card { margin: 20px 0; padding: 20px; border: 1px solid #426451; border-radius: 12px; background: #103b29; }
+.chart-scroll { overflow-x: auto; margin: 18px 0; border: 1px solid #426451; border-radius: 10px; }
+.strategy-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: .86rem; }
+.strategy-table th, .strategy-table td { padding: 5px; border: 1px solid #426451; text-align: center; }
+.strategy-table th { color: #fff4cf; background: #09281c; font-weight: 700; padding: 10px 5px; }
+.strategy-table th:first-child { min-width: 78px; }
+.chart-action { width: 100%; min-height: 36px; border: 1px solid transparent; border-radius: 5px; font: inherit; font-weight: 800; cursor: pointer; padding: 5px; color: #13251b; background: #dae8df; }
+.chart-action[data-action='hit'], .chart-action.hit { background: #bce4ca; }
+.chart-action[data-action='stand'], .chart-action.stand { background: #f1cccc; }
+.chart-action[data-action='double'], .chart-action.double { background: #eed786; }
+.chart-action[data-action='split'], .chart-action.split { background: #bcd6ed; }
+.chart-action[data-action='surrender'], .chart-action.surrender { background: #dac8ed; }
+.chart-action[aria-pressed='true'] { outline: 3px solid #fff; outline-offset: -3px; }
+.chart-action:hover { filter: brightness(1.12); }
+.chart-legend > span { padding: 6px 9px; border: 1px solid #426451; border-radius: 6px; color: #fff4cf; font-size: .8rem; }
+@media (max-width: 780px) {
+    .account-bar { flex-wrap: wrap; box-sizing: border-box; height: auto; min-height: 58px; }
+    .account-actions { margin-left: auto; }
+    .account-nav { display: flex; order: 3; flex: 1 0 100%; width: 100%; min-width: 0; margin: 4px 0 0; overflow-x: auto; }
+    .account-nav button { flex: 0 0 auto; min-height: 44px; }
+    .learning-page { padding: 22px 16px; }
+}

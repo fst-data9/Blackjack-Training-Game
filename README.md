@@ -10,6 +10,21 @@ pays 1:1 on a win. This split-ace rule differs from casinos that permit only one
 card per split ace; the displayed -0.5% expected return is a rough estimate,
 not a calculation for the trainer's exact rules.
 
+## Interactive learning
+
+Use the top navigation to explore **Learn**, **Glossary**, and **Charts** without
+ending an active practice round. Learn includes short lessons and a decision
+quiz; Glossary filters blackjack terms; Charts lets you inspect hard totals,
+soft totals and pairs, with affordability and surrender controls. Learning
+challenges do not change your bankroll or gameplay statistics.
+
+Charts use the trainer's fixed strategy functions. Changing shoe size does not
+select a deck-specific strategy; single- and double-deck optimal play can differ.
+The pages distinguish trainer rules from casino variations and link to the
+[Wizard of Odds basics](https://wizardofodds.com/games/blackjack/basics/) and
+[strategy calculator](https://wizardofodds.com/games/blackjack/strategy/calculator/)
+used as research references. No external scripts or accounts are needed.
+
 ## Goals
 
 - [ ] Practice PostgreSQL SQL syntax and features

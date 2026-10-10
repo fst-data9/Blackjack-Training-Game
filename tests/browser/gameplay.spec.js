@@ -64,16 +64,12 @@ test("both split aces at 21 settle without leaving controls stuck", async ({ pag
     await expect(page.locator("#bankrollAmt")).toHaveText("1040");
 });
 
-test("navigation and introductory deal button work through served scripts", async ({ page, isMobile }) => {
-    if (isMobile) {
-        // The current mobile design hides the placeholder navigation.
-        await expect(page.locator(".account-nav")).toBeHidden();
-    } else {
-        await page.locator('[data-placeholder-page="learn"]').click();
-        await expect(page.locator("#gamePage")).toBeHidden();
-        await expect(page.locator('[data-placeholder-content="learn"]')).toBeVisible();
-        await page.locator('[data-placeholder-page="practice"]').click();
-    }
+test("navigation and introductory deal button work through served scripts", async ({ page }) => {
+    await expect(page.locator(".account-nav")).toBeVisible();
+    await page.locator('[data-placeholder-page="learn"]').click();
+    await expect(page.locator("#gamePage")).toBeHidden();
+    await expect(page.locator('[data-placeholder-content="learn"]')).toBeVisible();
+    await page.locator('[data-placeholder-page="practice"]').click();
     await expect(page.locator("#gamePage")).toBeVisible();
     await page.locator("#startTrainingBtn").click();
     await expect(page.locator("#statsRounds")).toHaveText("1");
@@ -150,4 +146,27 @@ test("page and split panels fit the viewport", async ({ page }) => {
         expect(box.x).toBeGreaterThanOrEqual(0);
         expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width + 1);
     }
+});
+
+test("learning pages preserve the round and serve interactive quiz, glossary and charts", async ({ page }) => {
+    await deal(page, ["10", "9", "6", "8"]);
+    const bankroll = await page.locator("#bankrollAmt").textContent();
+    await page.locator('[data-placeholder-page="learn"]').click();
+    await page.locator(".quiz-choices").getByRole("button", { name: "Surrender", exact: true }).click();
+    await expect(page.locator(".quiz-feedback")).toContainText("Nice decision!");
+    await page.locator('[data-placeholder-page="glossary"]').click();
+    await page.locator("#glossarySearch").fill("keep playing");
+    await expect(page.locator(".glossary-card")).toHaveCount(1);
+    await expect(page.locator(".glossary-card")).toContainText("keep playing after splitting aces");
+    await page.locator('[data-placeholder-page="charts"]').click();
+    await page.locator("#chartType").selectOption("soft");
+    await page.locator("#chartDouble").uncheck();
+    await page.getByRole("button", { name: "A, 7 (18) against dealer 6: Stand", exact: true }).click();
+    await expect(page.locator("#chartDetail")).toContainText("Stand");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.locator('[data-placeholder-page="practice"]').click();
+    await expect(page.locator("#bankrollAmt")).toHaveText(bankroll);
+    await expect(page.locator("#statsRounds")).toHaveText("1");
+    await expect(page.locator("#newGameBtn")).toBeDisabled();
+    await expect(page.locator("#standBtn")).toBeEnabled();
 });
