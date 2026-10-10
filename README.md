@@ -10,6 +10,13 @@ pays 1:1 on a win. This split-ace rule differs from casinos that permit only one
 card per split ace; the displayed -0.5% expected return is a rough estimate,
 not a calculation for the trainer's exact rules.
 
+Completed rounds show a compact result overlay with the outcome, round net
+(including insurance), and accuracy for that round's decisions. Split rounds
+summarise every hand once they all finish. The overlay lets clicks pass through,
+never moves keyboard focus, and clears after 3.5 seconds or immediately on the
+next deal. The status area keeps the decision summary available afterwards.
+Hands settled without a choice show “No decisions needed”.
+
 ## Interactive learning
 
 Use the top navigation to explore **Learn**, **Glossary**, and **Charts** without

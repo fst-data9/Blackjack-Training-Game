@@ -62,6 +62,8 @@ test("both split aces at 21 settle without leaving controls stuck", async ({ pag
     await expect(page.locator("#hitBtn")).toBeDisabled();
     await expect(page.locator("#statsHands")).toHaveText("2");
     await expect(page.locator("#bankrollAmt")).toHaveText("1040");
+    await expect(page.locator("#roundResultDetails")).toHaveText("2 won");
+    await expect(page.locator("#roundResultStrategy")).toHaveText("All decisions correct · 1/1");
 });
 
 test("navigation and introductory deal button work through served scripts", async ({ page }) => {
@@ -169,4 +171,118 @@ test("learning pages preserve the round and serve interactive quiz, glossary and
     await expect(page.locator("#statsRounds")).toHaveText("1");
     await expect(page.locator("#newGameBtn")).toBeDisabled();
     await expect(page.locator("#standBtn")).toBeEnabled();
+});
+
+const resultScenarios = [
+    { name: "correct win", cards: ["10", "9", "8", "8"], actions: ["stand"], title: "You won!", net: "+$20", strategy: "All decisions correct · 1/1" },
+    { name: "correct loss", cards: ["10", "10", "8", "9"], actions: ["stand"], title: "You lost", net: "-$20", strategy: "All decisions correct · 1/1" },
+    { name: "win with a mistake", cards: ["10", "6", "2", "10", "5", "10"], actions: ["hit", "stand"], title: "You won!", net: "+$20", strategy: "1 move to review · 1/2 correct" },
+    { name: "bust with a mistake", cards: ["10", "9", "8", "8", "10"], actions: ["hit"], title: "You lost", net: "-$20", strategy: "1 move to review · 0/1 correct" },
+    { name: "multiple mistakes", cards: ["5", "9", "6", "8", "2"], actions: ["hit", "stand"], title: "You lost", net: "-$20", strategy: "2 moves to review · 0/2 correct" },
+    { name: "push", cards: ["10", "10", "8", "8"], actions: ["stand"], title: "Push", net: "$0", strategy: "All decisions correct · 1/1" },
+    { name: "surrender", cards: ["10", "10", "6", "8"], actions: ["surrender"], title: "Surrendered", net: "-$10", strategy: "All decisions correct · 1/1" },
+    { name: "natural blackjack", cards: ["A", "9", "K", "8"], actions: [], title: "Blackjack!", net: "+$30", strategy: "No decisions needed" },
+    { name: "dealer blackjack", cards: ["10", "K", "8", "A"], actions: [], title: "You lost", net: "-$20", strategy: "No decisions needed" },
+    { name: "double", cards: ["5", "6", "6", "10", "10", "10"], actions: ["double"], title: "You won!", net: "+$40", strategy: "All decisions correct · 1/1" },
+    { name: "insurance offsets loss", cards: ["10", "A", "8", "K"], actions: ["insurance"], title: "You lost", net: "$0", strategy: "1 move to review · 0/1 correct" },
+];
+
+for (const scenario of resultScenarios) {
+    test(`round overlay: ${scenario.name}`, async ({ page }) => {
+        await deal(page, scenario.cards);
+        for (const action of scenario.actions) await page.locator(`#${action}Btn`).click();
+        await expect(page.locator("#roundResult")).toBeVisible();
+        await expect(page.locator("#roundResultTitle")).toHaveText(scenario.title);
+        await expect(page.locator("#roundResultNet")).toHaveText(scenario.net);
+        await expect(page.locator("#roundResultStrategy")).toHaveText(scenario.strategy);
+        await expect(page.locator("#status")).toContainText(scenario.strategy);
+        await expect(page.locator("#newGameBtn")).toBeEnabled();
+        await expect(page.locator("#roundResultDetails")).toBeHidden();
+    });
+}
+
+test("split overlay waits for both hands and combines results and decision accuracy", async ({ page }) => {
+    await deal(page, ["8", "9", "8", "8", "10", "2"]);
+    await page.locator("#splitBtn").click();
+    await expect(page.locator("#roundResult")).toBeHidden();
+    await page.locator("#standBtn").click();
+    await expect(page.locator("#roundResult")).toBeHidden();
+    await page.locator("#standBtn").click();
+    await expect(page.locator("#roundResultTitle")).toHaveText("Split results");
+    await expect(page.locator("#roundResultDetails")).toHaveText("1 won · 1 lost");
+    await expect(page.locator("#roundResultNet")).toHaveText("$0");
+    await expect(page.locator("#roundResultStrategy")).toHaveText("1 move to review · 2/3 correct");
+});
+
+test("overlay passes clicks through, preserves focus and clears on immediate redeal", async ({ page }) => {
+    await deal(page, ["10", "9", "8", "8"]);
+    await page.locator("#sessionStatsTab").focus();
+    await page.locator("#standBtn").dispatchEvent("click");
+    await expect(page.locator("#sessionStatsTab")).toBeFocused();
+    await expect(page.locator("#roundResult")).toHaveCSS("pointer-events", "none");
+
+    // Confirm hit-testing through the entire toast, even when scrolled over
+    // the table. It must never intercept a game or navigation control.
+    await page.locator("#newGameBtn").scrollIntoViewIfNeeded();
+    expect(await page.locator("#roundResult").evaluate(toast => {
+        const rect = toast.getBoundingClientRect();
+        const target = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+        return !toast.contains(target);
+    })).toBe(true);
+    const box = await page.locator("#roundResult").boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+    await deal(page, ["10", "9", "8", "8"]);
+    await expect(page.locator("#roundResult")).toBeHidden();
+    await expect(page.locator("#hitBtn")).toBeEnabled();
+    await page.locator("#standBtn").click();
+    await expect(page.locator("#roundResultStrategy")).toHaveText("All decisions correct · 1/1");
+});
+
+test("overlay expires without removing the accessible summary or racing the next result", async ({ page }) => {
+    await page.clock.install();
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await deal(page, ["10", "9", "8", "8"]);
+    await page.locator("#standBtn").click();
+    await expect(page.locator("#roundResult")).toBeVisible();
+    await expect(page.locator("#roundResult")).toHaveCSS("animation-name", "none");
+    await page.clock.fastForward(2000);
+
+    await deal(page, ["10", "10", "8", "9"]);
+    await page.locator("#standBtn").click();
+    await page.clock.fastForward(1600);
+    await expect(page.locator("#roundResultTitle")).toHaveText("You lost");
+    await expect(page.locator("#roundResult")).toBeVisible();
+    await page.clock.fastForward(2000);
+    await expect(page.locator("#roundResult")).toBeHidden();
+    await expect(page.locator("#status")).toContainText("All decisions correct · 1/1");
+    await expect(page.locator("#status")).toHaveAttribute("role", "status");
+});
+
+test("completed-round overlay stays on the practice page and clears on a bankroll reset", async ({ page }) => {
+    await page.clock.install();
+    await deal(page, ["10", "9", "8", "8"]);
+    await page.locator("#standBtn").click();
+    await page.locator("#openReviewBtn").click();
+    await expect(page.locator("#roundResult")).toBeHidden();
+    await page.locator("#closeReviewBtn").click();
+    await expect(page.locator("#roundResult")).toBeVisible();
+    await page.locator("#resetBankrollBtn").click();
+    await expect(page.locator("#roundResult")).toBeHidden();
+});
+
+test("consecutive opening blackjacks restart the result animation", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await deal(page, ["A", "9", "K", "8"]);
+    await expect.poll(() => page.locator("#roundResult").evaluate(toast => toast.getAnimations()[0].currentTime)).toBeGreaterThan(250);
+    const animationTime = await page.evaluate(() => {
+        deck = ["10", "K", "8", "A"].map(rank => ({ rank, suit: "♠" })).reverse();
+        shoeNeedsShuffle = false;
+        document.getElementById("newGameBtn").click();
+        return document.getElementById("roundResult").getAnimations()[0].currentTime;
+    });
+    expect(animationTime).toBeLessThan(100);
+    await expect(page.locator("#roundResultTitle")).toHaveText("You lost");
 });
