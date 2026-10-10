@@ -1102,6 +1102,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="learning-pages.css">
 </head>
 
 <body>
@@ -1278,17 +1279,17 @@
     </main>
 
     <main id="placeholderPages" hidden>
-        <section class="placeholder-page" data-placeholder-content="learn">
-            <h1>Learn</h1>
-            <p>Lessons and guided blackjack concepts will live here soon. Start with Practice to train your decisions at the table.</p>
+        <section class="placeholder-page learning-page" data-placeholder-content="learn" hidden aria-labelledby="learnHeading">
+            <h1 id="learnHeading" tabindex="-1">Learn</h1>
+            <div id="learnContent"></div>
         </section>
-        <section class="placeholder-page" data-placeholder-content="glossary">
-            <h1>Glossary</h1>
-            <p>A quick reference for blackjack terms, table rules, and the language used throughout your training sessions.</p>
+        <section class="placeholder-page learning-page" data-placeholder-content="glossary" hidden aria-labelledby="glossaryHeading">
+            <h1 id="glossaryHeading" tabindex="-1">Glossary</h1>
+            <div id="glossaryContent"></div>
         </section>
-        <section class="placeholder-page" data-placeholder-content="charts">
-            <h1>Charts</h1>
-            <p>Strategy charts and table references are being prepared for this space.</p>
+        <section class="placeholder-page learning-page" data-placeholder-content="charts" hidden aria-labelledby="chartsHeading">
+            <h1 id="chartsHeading" tabindex="-1">Charts</h1>
+            <div id="chartsContent"></div>
         </section>
         <section class="placeholder-page" data-placeholder-content="share">
             <h1>Share</h1>
@@ -1350,6 +1351,8 @@
     <script src="blackjack-game.js"></script>
     <script src="auth.js"></script>
     <script src="site-nav.js"></script>
+    <script src="learning-pages.js"></script>
+    <script src="strategy-charts.js"></script>
 
     <footer class="credits">
         <em>

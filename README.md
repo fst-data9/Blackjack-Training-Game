@@ -2,6 +2,21 @@
 
 This is a small blackjack trainer for basic strategy practice. The browser game can run as a static page, and the optional backend records completed hands to PostgreSQL for later SQL practice and analysis.
 
+## Interactive learning
+
+Use the top navigation to explore **Learn**, **Glossary**, and **Charts** without
+ending an active practice round. Learn includes short lessons and a decision
+quiz; Glossary filters blackjack terms; Charts lets you inspect hard totals,
+soft totals and pairs, with affordability and surrender controls. Learning
+challenges do not change your bankroll or gameplay statistics.
+
+Charts use the trainer's fixed strategy functions. Changing shoe size does not
+select a deck-specific strategy; single- and double-deck optimal play can differ.
+The pages distinguish trainer rules from casino variations and link to the
+[Wizard of Odds basics](https://wizardofodds.com/games/blackjack/basics/) and
+[strategy calculator](https://wizardofodds.com/games/blackjack/strategy/calculator/)
+used as research references. No external scripts or accounts are needed.
+
 ## Goals
 
 - [ ] Practice PostgreSQL SQL syntax and features
