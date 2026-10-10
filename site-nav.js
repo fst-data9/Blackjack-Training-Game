@@ -14,6 +14,8 @@ function showSitePage(pageName) {
         page.hidden = page.dataset.placeholderContent !== pageName;
     });
 
+    document.getElementById(`${pageName}Heading`)?.focus();
+
     navButtons.forEach((button) => {
         if (button.dataset.placeholderPage === pageName) {
             button.setAttribute("aria-current", "page");

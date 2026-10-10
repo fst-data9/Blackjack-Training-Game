@@ -47,6 +47,35 @@ jobs:
       - name: Run blackjack simulation
         run: npm run test:sim
 
+  browser:
+    name: Desktop and mobile browser behaviour
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+      - name: Install browser and backend dependencies
+        run: |
+          npm ci
+          npm ci --prefix backend
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Test browser behaviour
+        run: npm run test:browser
+      - name: Save browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failures
+          path: test-results/
+          retention-days: 7
+
   dependency-audit:
     name: Production dependency audit
     runs-on: ubuntu-24.04
@@ -182,6 +211,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     needs:
       - test
+      - browser
       - dependency-audit
       - integration
       - database-backups
@@ -222,6 +252,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs:
       - test
+      - browser
       - dependency-audit
       - integration
       - database-backups
