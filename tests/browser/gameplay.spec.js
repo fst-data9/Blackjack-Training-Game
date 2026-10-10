@@ -68,11 +68,16 @@ test("both split aces at 21 settle without leaving controls stuck", async ({ pag
 
 test("navigation and introductory deal button work through served scripts", async ({ page }) => {
     await expect(page.locator(".account-nav")).toBeVisible();
-    const header = await page.locator(".site-chrome").boundingBox();
-    expect(header.height).toBeLessThanOrEqual(page.viewportSize().width <= 780 ? 105 : 60);
+    const banner = await page.locator(".site-banner").boundingBox();
+    const navigation = await page.locator(".account-bar").boundingBox();
+    expect(banner.y).toBe(0);
+    expect(banner.width).toBe(page.viewportSize().width);
+    expect(banner.height).toBeCloseTo(banner.width / 6, 0);
+    expect(navigation.y).toBeCloseTo(banner.y + banner.height, 0);
+    await expect(page.locator(".account-bar #openAuthBtn")).toBeVisible();
     if (page.viewportSize().width <= 560) {
         const intro = await page.locator(".training-intro").boundingBox();
-        expect(intro.y + intro.height).toBeLessThan(190);
+        expect(intro.y + intro.height).toBeLessThan(290);
         for (const button of await page.locator(".account-nav [data-placeholder-page]").all()) {
             const box = await button.boundingBox();
             expect(box.x).toBeGreaterThanOrEqual(0);

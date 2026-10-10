@@ -18,7 +18,6 @@
 
     <style>
         body {
-            --account-bar-height: 58px;
             font-family: system-ui, Arial;
             padding: 0;
             margin: 0 auto;
@@ -31,47 +30,30 @@
             position: static;
         }
 
+        .site-banner {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #0b3d25;
+        }
+
         .account-bar {
             position: relative;
             z-index: 20;
             box-sizing: border-box;
-            width: 100%;
-            height: var(--account-bar-height);
+            width: min(calc(100% - 24px), 760px);
+            min-height: 48px;
+            margin: 0 auto 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
-            padding: 8px 12px;
+            gap: 8px;
+            padding: 4px 8px;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            border-right: 0;
-            border-left: 0;
-            border-radius: 0;
-            background: rgba(12, 13, 15, 0.9);
+            border-radius: 0 0 12px 12px;
+            background: #123d2c;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
             backdrop-filter: blur(10px);
-        }
-
-        .account-brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 9px;
-            color: #fff;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-        }
-
-        .account-brand::before {
-            display: grid;
-            width: 30px;
-            height: 30px;
-            place-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 8px;
-            background: linear-gradient(145deg, #f3d48a, #9b6b26);
-            color: #173d2d;
-            content: "♠";
-            font-size: 1.15rem;
-            line-height: 1;
         }
 
         .account-actions {
@@ -85,12 +67,12 @@
             align-items: center;
             gap: 4px;
             margin-right: auto;
-            margin-left: 18px;
+            margin-left: 0;
         }
 
         .account-nav :is(button, a) {
             margin: 0;
-            padding: 8px 11px;
+            padding: 6px 8px;
             border: 1px solid transparent;
             border-radius: 8px;
             background: transparent;
@@ -1150,22 +1132,6 @@
         }
 
         @media (max-width: 560px) {
-            .account-bar {
-                width: 100%;
-                border-right: 0;
-                border-left: 0;
-                border-radius: 0;
-                gap: 8px;
-            }
-
-            .account-brand {
-                font-size: 0.88rem;
-            }
-
-            .account-nav {
-                display: none;
-            }
-
             .account-name {
                 max-width: 92px;
             }
@@ -1208,14 +1174,14 @@
 <body>
     <header class="site-chrome">
       <h1 class="visually-hidden">Basic Blackjack Training</h1>
+      <img class="site-banner" src="images/Blackjack-Training-Banner-v2.png" alt="" width="3072" height="512" fetchpriority="high" />
       <nav class="account-bar" aria-label="Account navigation">
-        <span class="account-brand">Blackjack Trainer</span>
         <div class="account-nav" aria-label="Main navigation">
-            <a href="/" data-placeholder-page="practice" aria-current="page">Practice</a>
-            <a href="/learn" data-placeholder-page="learn">Learn</a>
-            <a href="/glossary" data-placeholder-page="glossary">Glossary</a>
-            <a href="/charts" data-placeholder-page="charts">Charts</a>
-            <button type="button" data-placeholder-page="share">Share</button>
+            <a href="/" data-placeholder-page="practice" aria-current="page"><span aria-hidden="true">♠</span> Practice</a>
+            <a href="/learn" data-placeholder-page="learn"><span aria-hidden="true">♣</span> Learn</a>
+            <a href="/glossary" data-placeholder-page="glossary"><span aria-hidden="true">▤</span> Glossary</a>
+            <a href="/charts" data-placeholder-page="charts"><span aria-hidden="true">▦</span> Charts</a>
+            <button type="button" data-placeholder-page="share"><span aria-hidden="true">↗</span> Share</button>
         </div>
         <div class="account-actions">
             <button id="openAuthBtn" type="button">Log in</button>
@@ -1250,7 +1216,7 @@
 
     <section class="training-intro" aria-labelledby="trainingIntroTitle">
         <div>
-            <h2 id="trainingIntroTitle">No login needed.</h2>
+            <h2 id="trainingIntroTitle">No login Required ever! ♠️♥️</h2>
             <p>Sign in to save stats.</p>
         </div>
         <button id="startTrainingBtn" type="button">Deal a hand</button>
