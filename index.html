@@ -317,6 +317,8 @@
             display: block;
             width: 100%;
             height: auto;
+            max-height: 140px;
+            object-fit: contain;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         }
 
@@ -336,9 +338,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 18px;
-            margin-bottom: 18px;
-            padding: 16px 18px;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 8px 12px;
             border: 1px solid rgba(231, 198, 109, 0.35);
             border-radius: 12px;
             background: linear-gradient(110deg, rgba(8, 63, 37, 0.94), rgba(19, 81, 50, 0.82));
@@ -346,9 +348,9 @@
         }
 
         .training-intro h2 {
-            margin: 0 0 4px;
+            margin: 0;
             color: #fff4cf;
-            font-size: 1.05rem;
+            font-size: 0.88rem;
         }
 
         .training-intro p {
@@ -360,6 +362,7 @@
 
         .training-intro button {
             flex: 0 0 auto;
+            min-height: 44px;
             margin: 0;
             border: 1px solid #e7c66d;
             border-radius: 8px;
@@ -1166,6 +1169,10 @@
         }
 
         @media (max-width: 560px) {
+            .site-banner {
+                display: none;
+            }
+
             .account-bar {
                 width: 100%;
                 border-right: 0;
@@ -1226,10 +1233,10 @@
       <nav class="account-bar" aria-label="Account navigation">
         <span class="account-brand">Blackjack Trainer</span>
         <div class="account-nav" aria-label="Main navigation">
-            <a href="/" data-placeholder-page="practice" aria-current="page">♠ Practice</a>
-            <a href="/learn" data-placeholder-page="learn">♣ Learn</a>
-            <a href="/glossary" data-placeholder-page="glossary">▤ Glossary</a>
-            <a href="/charts" data-placeholder-page="charts">▦ Charts</a>
+            <a href="/" data-placeholder-page="practice" aria-current="page">Practice</a>
+            <a href="/learn" data-placeholder-page="learn">Learn</a>
+            <a href="/glossary" data-placeholder-page="glossary">Glossary</a>
+            <a href="/charts" data-placeholder-page="charts">Charts</a>
             <button type="button" data-placeholder-page="share">Share</button>
         </div>
         <div class="account-actions">
@@ -1276,8 +1283,8 @@
 
     <section class="training-intro" aria-labelledby="trainingIntroTitle">
         <div>
-            <h2 id="trainingIntroTitle">No login required — ever! ♠️♥️</h2>
-            <p>Jump straight to the table and start sharpening your blackjack skills with no sign-up and no strings attached. Want to keep score? Create an optional account to save your stats, review past sessions, and watch your game improve over time. Play a hand, learn a little, and keep building your edge. ♦️♣️</p>
+            <h2 id="trainingIntroTitle">No login needed.</h2>
+            <p>Sign in to save stats.</p>
         </div>
         <button id="startTrainingBtn" type="button">Deal a hand</button>
     </section>
