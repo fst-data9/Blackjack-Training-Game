@@ -14,7 +14,7 @@
         <p class="chart-legend">H = Hit · S = Stand · D = Double · P = Split · R = Surrender</p>
         <div class="chart-scroll" tabindex="0" role="region" aria-label="Strategy chart; scroll horizontally on smaller screens"><table class="strategy-table"><caption>Choose a cell to explore a move</caption><thead></thead><tbody></tbody></table></div>
         <div id="chartDetail" class="learning-card" role="status" aria-live="polite">Choose any cell to see the recommended action.</div>
-        <p class="learning-note">These are the coach’s fixed recommendations, not deck-specific or card-counting advice. Practice can use 1–8 decks; single- and double-deck optimal strategies differ. Split hands cannot surrender. Split aces receive one additional card and finish; split 21 pays 1:1. When doubling soft 18 is unavailable, stand against 3–6.</p>
+        <p class="learning-note">These are the coach’s fixed recommendations, not deck-specific or card-counting advice. Practice can use 1–8 decks; single- and double-deck optimal strategies differ. Split hands cannot surrender. Split aces allow continued play; all split hands advance automatically at 21, and split 21 pays 1:1. When doubling soft 18 is unavailable, stand against 3–6.</p>
         <p class="learning-note">Further reading: <a href="https://wizardofodds.com/games/blackjack/strategy/calculator/" target="_blank" rel="noopener noreferrer">Wizard of Odds strategy calculator</a> and <a href="https://wizardofodds.com/games/blackjack/basics/" target="_blank" rel="noopener noreferrer">blackjack basics</a>. Rules affect strategy; basic strategy does not guarantee a win.</p>`;
     const type = document.getElementById("chartType");
     const afford = document.getElementById("chartDouble");

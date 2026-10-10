@@ -2,6 +2,14 @@
 
 This is a small blackjack trainer for basic strategy practice. The browser game can run as a static page, and the optional backend records completed hands to PostgreSQL for later SQL practice and analysis.
 
+The trainer allows continued play after splitting aces, using the same actions
+as other split hands. A split hand reaching 21 automatically advances to the
+next unfinished hand; the dealer plays after all player hands finish. A split
+ace plus a ten-value card counts as regular 21, not a natural blackjack, and
+pays 1:1 on a win. This split-ace rule differs from casinos that permit only one
+card per split ace; the displayed -0.5% expected return is a rough estimate,
+not a calculation for the trainer's exact rules.
+
 ## Interactive learning
 
 Use the top navigation to explore **Learn**, **Glossary**, and **Charts** without
@@ -112,6 +120,50 @@ See [SECURITY.md](SECURITY.md) for the threat checklist and deployment requireme
 For local `file://` play, `backend/.env.example` enables `ALLOW_FILE_ORIGIN=true`. Before deploying publicly, set `ALLOW_FILE_ORIGIN=false` and set `ALLOWED_ORIGINS` to the deployed frontend origin only.
 
 ## Useful Commands
+
+### Gameplay checks
+
+Run `npm run test:sim` for deterministic gameplay regressions followed by 1,000
+random rounds. `npm run test:sim:long` runs 10,000 random rounds. Every run checks
+opening blackjack, insurance, win/loss/push, surrender, doubling, splits and
+resplits, bankroll restrictions, monetary rounding, decision feedback, review,
+shoe transitions, card scoring and strategy-chart fallbacks.
+
+Random play is seeded so failures can be reproduced. Supply the round count and
+seed directly, for example `node tests/blackjack-sim.js 10000 42`. The default
+seed is `123456789`; try additional seeds for varied play. Output lists the
+deterministic coverage and seed. The checker uses a mock DOM and mock API, so
+real browser layout, navigation, account flows and persistence still require
+browser/API integration checks. This is rule and transition coverage, not an
+exhaustive enumeration of all possible shoes.
+
+### Real browser checks
+
+Install the browser-test dependencies once, then run the desktop and mobile
+Chromium suites:
+
+```sh
+npm ci
+npm ci --prefix backend
+npx playwright install chromium
+npm run test:browser
+```
+
+On Linux CI, use `npx playwright install --with-deps chromium` to install browser
+system dependencies too. The suite starts a dedicated local Express server on
+port 3101 and tests the actual served scripts, security headers, DOM events,
+split-ace transitions, navigation, login-dialog focus/error recovery,
+login/logout controls, session/user statistics tabs, review and
+four-hand responsive layout. All `/api/` data requests are intercepted; no
+PostgreSQL service or real accounts are used. Server-side authentication and
+database persistence remain covered by the separate integration tests.
+
+Failures save screenshots and Playwright traces under ignored `test-results/`.
+The browser job runs on pull requests and blocks staging/production deployment
+when it fails. Add scenarios here for browser-specific bugs, alongside simulation
+cases for the underlying game rules.
+
+### Services
 
 ```sh
 podman-compose up --build

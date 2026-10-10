@@ -10,7 +10,7 @@
         ['01', 'Meet the table', 'Get closer to 21 than the dealer without going over. Number cards keep their value, faces count as 10, and an ace counts as 1 or 11. You play against the dealer, not the other players.', 'A + 7 = soft 18. Add a 9 and your ace becomes 1: now you have hard 17.'],
         ['02', 'Your five moves', 'Hit takes another card. Stand keeps your total. Double adds an equal bet and gives exactly one more card. Split turns a matching pair into separate hands with separate bets. Late surrender returns half your original bet (rounded down here) after the dealer checks for blackjack.', 'Double and split need enough bankroll. Surrender is available on your original two-card hand.'],
         ['03', 'Read the dealer', 'Basic strategy combines your hand with the dealer’s visible card. A dealer 4, 5 or 6 is vulnerable, but a bust is never guaranteed. Against a strong upcard you often need to improve your hand.', 'Hard 12 stands against 4–6, but hits against 2 or 3. Small details matter.'],
-        ['04', 'Soft hands & pairs', 'A soft hand contains an ace still worth 11. That cushion creates good doubling opportunities. Pairs have their own strategy: splitting aces and eights is a useful starting point; keeping tens together protects a strong 20.', 'This trainer allows up to four split hands, doubling after splits, and one additional card per split ace. A split-hand 21 pays as an ordinary win.'],
+        ['04', 'Soft hands & pairs', 'A soft hand contains an ace still worth 11. That cushion creates good doubling opportunities. Pairs have their own strategy: splitting aces and eights is a useful starting point; keeping tens together protects a strong 20.', 'This trainer allows up to four split hands, doubling after splits, and continued play after splitting aces. Every split hand advances automatically at 21; a split-hand 21 pays as an ordinary win.'],
         ['05', 'Think in decisions', 'A correct decision can lose and a poor decision can win. Basic strategy aims to improve the average result over many hands; it cannot promise a profit. Treat the chips as practice and judge your choices, not your last result.', 'Insurance is a separate bet on dealer blackjack. The trainer’s basic strategy declines it.']
     ];
     const questions = [
@@ -115,7 +115,7 @@
         ['S17', 'Table', 'Stand on soft 17. The dealer stands on A + 6 in this trainer; H17 tables instead require a hit.'],
         ['Shoe', 'Table', 'The combined decks used for dealing. The trainer lets you choose 1, 2, 3, 4, 6 or 8 decks.'],
         ['Soft hand', 'Cards', 'A hand with an ace counted as 11. A + 6 is soft 17; the ace can switch to 1 if another card would otherwise bust the hand.'],
-        ['Split', 'Actions', 'Separate a matching pair into two hands with equal bets. Here split aces receive one additional card and finish; other split hands advance automatically at 21.'],
+        ['Split', 'Actions', 'Separate a matching pair into two hands with equal bets. Here you can keep playing after splitting aces; all split hands advance automatically at 21.'],
         ['Stand', 'Actions', 'Keep your current total and finish your turn on that hand.'],
         ['Ten-value card', 'Cards', 'A 10, jack, queen or king. All count as 10.']
     ];
