@@ -28,7 +28,7 @@
             const summary = make('summary');
             summary.append(make('span', number, 'lesson-number'), make('span', title));
             details.dataset.topic = title.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/-$/, '');
-            const link = make('a', 'Read this lesson →');
+            const link = make('a', 'Read this lesson →', 'topic-link');
             link.href = `/learn/${details.dataset.topic}`;
             details.append(summary, make('p', body), make('p', tip, 'lesson-tip'), link);
             lessonGrid.append(details);
@@ -118,7 +118,7 @@
             matches.forEach(([term, group, description]) => {
                 const card = make('article', '', 'glossary-card');
                 card.dataset.topic = term.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const link = make('a', 'Term link');
+                const link = make('a', `${term} →`, 'topic-link');
                 link.href = `/glossary/${card.dataset.topic}`;
                 card.append(make('span', group, 'learning-eyebrow'), make('h2', term), make('p', description));
                 card.append(link);

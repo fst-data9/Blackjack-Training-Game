@@ -51,9 +51,11 @@ async function navigatePublicPage(path, push = true) {
             target.setAttribute(attribute, source.getAttribute(attribute));
         }
         const section = path.split("/")[1] || "practice";
-        document.querySelectorAll('.topic-view').forEach(view => view.remove());
+        document.querySelectorAll('.topic-view, .topic-index, [data-related-topics]').forEach(view => view.remove());
         const sourceView = html.querySelector('.topic-view');
         if (sourceView) document.getElementById(`${section}Content`).before(sourceView);
+        const sourceEnd = html.querySelector('.topic-index, [data-related-topics]');
+        if (sourceEnd) document.getElementById(`${section}Content`).after(sourceEnd);
         const sourceHeading = html.getElementById(`${section}Heading`);
         if (sourceHeading) document.getElementById(`${section}Heading`).textContent = sourceHeading.textContent;
         if (section === "charts" && path.split("/")[2]) {

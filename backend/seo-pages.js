@@ -23,8 +23,11 @@ export function renderSeoPage(template, page) {
   const [title, description, heading, intro] = topic
     ? [`${topic[0]} | Blackjack Trainer`, topic[1], topic[0], topic[1]] : pages[page];
   const entries = Object.entries(topics).filter(([path]) => path.startsWith(`${section}/`));
-  const links = `<nav aria-label="${section} topics"><ul>${entries.map(([path, entry]) => `<li><a href="/${path}">${escape(entry[0])}</a></li>`).join("")}</ul></nav>`;
-  const initial = topic ? `<article class="learning-card"><h2>${escape(topic[0])}</h2><p>${escape(topic[1])}</p><p>${escape(topic[2])}</p><p><a href="/${section}">All ${section} topics</a></p></article>` : entries.map(([, entry]) => `<article><h2>${escape(entry[0])}</h2><p>${escape(entry[1])}</p><p>${escape(entry[2])}</p></article>`).join("");
+  const indexHeading = { learn: "All blackjack lessons", glossary: "All glossary terms", charts: "All strategy charts" }[section];
+  const links = `<nav aria-label="${escape(indexHeading)}"><ul>${entries.map(([path, entry]) => `<li><a class="topic-link" href="/${path}">${escape(entry[0])}</a></li>`).join("")}</ul></nav>`;
+  const indexBody = section === "glossary" ? `<details><summary>Browse all ${entries.length} glossary terms</summary>${links}</details>` : links;
+  const topicIndex = `<section class="topic-index" aria-labelledby="${section}IndexHeading"><h2 id="${section}IndexHeading">${escape(indexHeading)}</h2>${indexBody}</section>`;
+  const initial = topic ? `<article class="learning-card"><h2>${escape(topic[0])}</h2><p>${escape(topic[1])}</p><p>${escape(topic[2])}</p><p><a class="topic-link" href="/${section}">${escape(indexHeading)} →</a></p></article>` : entries.map(([, entry]) => `<article><h2>${escape(entry[0])}</h2><p>${escape(entry[1])}</p><p>${escape(entry[2])}</p></article>`).join("");
   return template
     .replace("<head>", '<head><base href="/">')
     .replaceAll(practiceTitle, escape(title))
@@ -34,7 +37,9 @@ export function renderSeoPage(template, page) {
     .replace('<main id="placeholderPages" hidden>', '<main id="placeholderPages">')
     .replace(`data-placeholder-content="${section}" hidden`, `data-placeholder-content="${section}"`)
     .replace(`>${section[0].toUpperCase() + section.slice(1)}</h1>`, `>${escape(heading)}</h1><p>${escape(intro)}</p>`)
-    .replace(`<div id="${section}Content"></div>`, `<div class="topic-view">${topic ? initial : ""}${links}</div><div id="${section}Content">${topic ? "" : initial}</div>`)
+    .replace(`<div id="${section}Content"></div>`, topic
+      ? `<div class="topic-view">${initial}</div><div id="${section}Content"></div><div data-related-topics></div>`
+      : `<div id="${section}Content">${initial}</div>${topicIndex}`)
     .replace(' data-placeholder-page="practice" aria-current="page"', ' data-placeholder-page="practice"')
     .replace(`data-placeholder-page="${section}"`, `data-placeholder-page="${section}" aria-current="page"`);
 }
