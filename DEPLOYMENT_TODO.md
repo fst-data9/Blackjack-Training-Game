@@ -141,3 +141,20 @@ Verify the public header after deployment. See
 - [ ] Restore and rollback procedures have been exercised successfully.
 - [ ] Security configuration has been reviewed against `SECURITY.md`.
 - [ ] Known limitations are documented and accepted.
+
+## Learning URLs and AdSense preparation (2026-10-11)
+
+- [x] Prepare individual lesson/term/chart-topic URLs with initial HTML, links and sitemap entries locally.
+- [x] Prepare disabled manual learning-content ad slots and consent-gated loader; no live ads activated.
+- [ ] Obtain publisher/display-unit IDs and confirm Google site review status.
+- [ ] Publish accurate privacy disclosures, choose/configure a certified CMP, complete CSP/ads.txt integration and consent/browser verification before activation. See `docs/adsense.md`.
+- [ ] Review and deploy learning routes; verify public URLs after authorized deployment.
+
+Local validation: backend checks and security tests passed; 70 desktop/mobile
+browser tests passed, followed by 22 updated SEO checks covering all 31 topics
+and direct nested-page asset loading. Database suites were not run (no database
+changes). Google approval, live ad delivery, CMP and deployed URLs are unverified.
+
+AdSense follow-up: owner supplied publisher ID and selected Google’s CMP.
+Verification meta tag prepared locally; production publication and Google
+verification/review remain pending. Display ad-unit ID is still needed.

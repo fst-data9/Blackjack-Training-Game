@@ -181,3 +181,12 @@ podman logs blackjack-postgres
 ```
 
 The same Compose file can also be used with Docker-compatible deployment tooling later because it builds standard container images.
+
+Learning lessons, glossary terms and chart hand types now have individual URLs,
+server-rendered explanations, canonical metadata and sitemap entries. In-page
+navigation retains the practice game. Short glossary pages explain individual
+terms; inclusion in the sitemap does not guarantee indexing.
+
+AdSense placements and a consent-gated loader are prepared but live serving is
+blocked pending account review, publisher IDs, privacy disclosures and certified
+CMP integration. See [AdSense preparation](docs/adsense.md).
