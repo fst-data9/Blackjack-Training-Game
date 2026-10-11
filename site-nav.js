@@ -33,7 +33,7 @@ document.getElementById("startTrainingBtn")?.addEventListener("click", () => {
     document.getElementById("newGameBtn")?.click();
 });
 
-const initialPage = location.pathname.replace(/\/$/, "").slice(1);
+const initialPage = location.pathname.split("/")[1];
 if (["learn", "glossary", "charts"].includes(initialPage)) showSitePage(initialPage);
 
 // Keep an active training round while giving each public view a crawlable URL.
@@ -50,16 +50,27 @@ async function navigatePublicPage(path, push = true) {
             const attribute = selector.startsWith('link') ? 'href' : 'content';
             target.setAttribute(attribute, source.getAttribute(attribute));
         }
-        showSitePage(path === "/" ? "practice" : path.slice(1));
+        const section = path.split("/")[1] || "practice";
+        document.querySelectorAll('.topic-view').forEach(view => view.remove());
+        const sourceView = html.querySelector('.topic-view');
+        if (sourceView) document.getElementById(`${section}Content`).before(sourceView);
+        const sourceHeading = html.getElementById(`${section}Heading`);
+        if (sourceHeading) document.getElementById(`${section}Heading`).textContent = sourceHeading.textContent;
+        if (section === "charts" && path.split("/")[2]) {
+            document.getElementById("chartType").value = path.split("/")[2];
+            document.getElementById("chartType").dispatchEvent(new Event("change"));
+        }
+        showSitePage(section);
+        window.dispatchEvent(new Event("publicpagechange"));
     } catch {
         location.assign(path);
     }
 }
-document.querySelectorAll('a[href="/"], a[href="/learn"], a[href="/glossary"], a[href="/charts"]').forEach(link => {
-    link.addEventListener("click", event => {
-        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        navigatePublicPage(link.getAttribute("href"));
-    });
+document.addEventListener("click", event => {
+    const link = event.target.closest('a');
+    if (!link || !/^\/(?:$|(?:learn|glossary|charts)(?:\/[a-z0-9-]+)?$)/.test(link.getAttribute("href") || "")) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    navigatePublicPage(link.getAttribute("href"));
 });
 window.addEventListener("popstate", () => navigatePublicPage(location.pathname, false));

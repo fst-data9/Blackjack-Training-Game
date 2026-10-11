@@ -61,3 +61,48 @@ test("navigation changes metadata and browser back restores the public view", as
     expect(robots.status()).toBe(200);
     expect(await robots.text()).toContain("Sitemap: https://blackjack-trainer.co/sitemap.xml");
 });
+
+for (const path of ['/learn/meet-the-table', '/glossary/soft-hand', '/charts/soft']) {
+    test(`topic ${path} has initial content and works in navigation`, async ({ browser, page, request }) => {
+        const context = await browser.newContext({ javaScriptEnabled: false });
+        const staticPage = await context.newPage();
+        await staticPage.goto(`http://127.0.0.1:3101${path}`);
+        await expect(staticPage.locator('.topic-view article')).toBeVisible();
+        await expect(staticPage.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://blackjack-trainer.co${path}`);
+        expect(await (await request.get('/sitemap.xml')).text()).toContain(`<loc>https://blackjack-trainer.co${path}</loc>`);
+        await context.close();
+        await page.goto(path);
+        await expect(page.locator(path.startsWith('/learn') ? '.lesson-card' : path.startsWith('/glossary') ? '#glossarySearch' : '#chartType').first()).toBeVisible();
+        await page.goto('/');
+        await page.evaluate(path => navigatePublicPage(path), path);
+        await expect(page.locator('.topic-view article')).toBeVisible();
+        await expect(page.locator('#gamePage')).toBeHidden();
+        await page.goBack();
+        await expect(page.locator('#gamePage')).toBeVisible();
+    });
+}
+
+test('ads stay disabled and learning content survives script failure', async ({ page }) => {
+    let adRequests = 0;
+    page.on('request', request => { if (/googlesyndication|doubleclick/.test(request.url())) adRequests++; });
+    await page.route('**/learning-pages.js', route => route.abort());
+    await page.goto('/learn');
+    await expect(page.locator('#learnContent')).toContainText('Meet the table');
+    await expect(page.locator('.ad-placement').first()).toBeHidden();
+    expect(adRequests).toBe(0);
+});
+
+test('every sitemap topic serves its own canonical and readable initial article', async ({ request }) => {
+    const sitemap = await (await request.get('/sitemap.xml')).text();
+    const topics = [...sitemap.matchAll(/<loc>https:\/\/blackjack-trainer.co(\/(?:learn|glossary|charts)\/[^<]+)<\/loc>/g)].map(match => match[1]);
+    expect(topics).toHaveLength(31);
+    for (const path of topics) {
+        const response = await request.get(path);
+        expect(response.status()).toBe(200);
+        const html = await response.text();
+        expect(html).toContain(`href="https://blackjack-trainer.co${path}"`);
+        expect(html).toContain('<article class="learning-card">');
+        expect(html).toContain('<base href="/">');
+    }
+    expect((await request.get('/learn/unknown-topic')).status()).toBe(404);
+});

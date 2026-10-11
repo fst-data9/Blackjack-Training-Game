@@ -70,5 +70,7 @@
         detail.textContent = "Choose any cell to see the recommended action.";
     }
     [type, afford, surrender].forEach(control => control.addEventListener("change", render));
+    const initialType = location.pathname.split("/")[2];
+    if (["hard", "soft", "pair"].includes(initialType)) type.value = initialType;
     render();
 })();

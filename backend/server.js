@@ -1,4 +1,5 @@
 import express from "express";
+import { readAdSenseConfig } from "./adsense-config.js";
 import { registerSeoRoutes } from "./seo-pages.js";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -16,6 +17,7 @@ import { logSecurityError } from "./security-log.js";
 // Load environment variables from .env
 dotenv.config();
 
+const adSenseConfig = readAdSenseConfig(process.env);
 const app = express();
 app.disable("x-powered-by");
 
@@ -782,6 +784,9 @@ app.get("/", (req, res) => res.sendFile(path.join(frontendRoot, "index.html")));
 app.get("/blackjack-game.js", (req, res) => res.sendFile(path.join(frontendRoot, "blackjack-game.js")));
 app.get("/auth.js", (req, res) => res.sendFile(path.join(frontendRoot, "auth.js")));
 app.get("/site-nav.js", (req, res) => res.sendFile(path.join(frontendRoot, "site-nav.js")));
+app.get("/learning-content.cjs", (req, res) => res.type("application/javascript").sendFile(path.join(frontendRoot, "learning-content.cjs")));
+app.get("/adsense.js", (req, res) => res.sendFile(path.join(frontendRoot, "adsense.js")));
+app.get("/adsense-config", (req, res) => res.json(adSenseConfig));
 app.get("/learning-pages.js", (req, res) => res.sendFile(path.join(frontendRoot, "learning-pages.js")));
 app.get("/learning-pages.css", (req, res) => res.sendFile(path.join(frontendRoot, "learning-pages.css")));
 app.get("/strategy-charts.js", (req, res) => res.sendFile(path.join(frontendRoot, "strategy-charts.js")));
