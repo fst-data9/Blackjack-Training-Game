@@ -40,6 +40,11 @@ echo "Running database migrations..."
 echo "Starting staging services..."
 "${compose[@]}" --profile staging up -d
 
+# Git may replace the bind-mounted Caddyfile inode. Recreate the proxy so the
+# running staging configuration includes the reviewed indexing restrictions.
+echo "Loading the staging proxy configuration..."
+"${compose[@]}" --profile staging up -d --no-deps --force-recreate caddy
+
 echo "Service status:"
 "${compose[@]}" ps
 
