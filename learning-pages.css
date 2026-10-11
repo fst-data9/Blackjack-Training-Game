@@ -1,6 +1,9 @@
 [hidden] { display: none !important; }
-.learning-page { width: min(100% - 32px, 1040px); text-align: left; }
-.learning-page > h1 { font-size: clamp(2rem, 5vw, 3rem); }
+.learning-page, .privacy-page { width: min(100% - 32px, 1040px); text-align: left; }
+.learning-page > h1, .privacy-page > h1 { font-size: clamp(2rem, 5vw, 3rem); }
+.privacy-page p { max-width: none; overflow-wrap: anywhere; }
+.privacy-page a { text-decoration: underline; }
+.credits p a { display: inline-block; min-height: 44px; line-height: 44px; }
 .learning-content > h2 { color: #fff4cf; font-size: 1.5rem; }
 .learning-content a { color: #f5d36f; }
 .learning-content :is(button, select, a, .chart-scroll):focus-visible { outline: 3px solid #f5d36f; outline-offset: 3px; }
@@ -80,7 +83,34 @@
 }
 
 .topic-view { margin: 20px 0; }
-.topic-view ul { display: flex; flex-wrap: wrap; gap: 12px 24px; padding-left: 20px; }
-.ad-placement { margin: 160px auto 40px; width: 100%; min-height: 320px; text-align: center; }
-.ad-placement p { font-size: .75rem; color: #b8cec0; }
-.ad-placement ins { display: block; min-height: 280px; }
+.topic-index, .related-topics { margin: 28px 0 20px; padding: 20px; border: 1px solid #426451; border-radius: 12px; background: #103b29; }
+:is(.topic-index, .related-topics) h2 { margin: 0 0 16px; color: #fff4cf; font-size: 1.3rem; }
+:is(.topic-index, .related-topics) ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.topic-index summary { display: flex; align-items: center; box-sizing: border-box; min-height: 44px; gap: 12px; color: #fff4cf; cursor: pointer; }
+.topic-index summary::after { content: '+'; margin-left: auto; color: #e7c66d; }
+.topic-index details[open] summary { margin-bottom: 16px; }
+.topic-index details[open] summary::after { content: '−'; }
+.topic-index summary:is(:hover, :focus-visible) { color: #e7c66d; }
+.topic-link, .topic-link:visited, .learning-content .topic-link, .learning-content .topic-link:visited {
+    display: inline-flex; align-items: center; box-sizing: border-box; min-height: 44px; max-width: 100%; padding: 10px 14px;
+    border: 1px solid #426451; border-radius: 10px; background: #09281c; color: #fff4cf; text-decoration: none; overflow-wrap: anywhere;
+}
+:is(.topic-index, .related-topics) .topic-link { display: flex; }
+.lesson-card > .topic-link, .glossary-card > .topic-link { margin-top: 14px; }
+.topic-link:is(:hover, :focus-visible), .learning-content .topic-link:is(:hover, :focus-visible) { color: #e7c66d; border-color: #e7c66d; }
+.topic-link:focus-visible, .learning-content .topic-link:focus-visible, .topic-index summary:focus-visible { outline: 3px solid #e7c66d; outline-offset: 3px; }
+.ad-placement { box-sizing: border-box; margin: 160px auto 40px; width: 100%; min-height: 320px; text-align: center; }
+.ad-placement p { margin: 0 0 12px; font-size: .75rem; line-height: 20px; color: #b8cec0; }
+.ad-placement ins { display: block; height: 280px; min-height: 280px; text-decoration: none; }
+#reviewPage .ad-placement p { color: #52625a; }
+.ad-placement[data-placement='learning-incontent'], .ad-placement[data-placement='review-summary'] { margin-bottom: 160px; }
+.glossary-grid > .ad-placement { grid-column: 1 / -1; }
+#gamePage > .ad-placement { display: block; clear: both; margin-bottom: 160px; }
+.ad-placement[data-suppressed] { visibility: hidden; }
+
+.breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; margin: 0 0 12px; padding: 0; list-style: none; color: #fff4cf; }
+.breadcrumbs li { display: flex; align-items: center; gap: 10px; min-height: 44px; min-width: 0; overflow-wrap: anywhere; }
+.breadcrumbs li + li::before { content: '›'; color: #e7c66d; }
+.breadcrumbs a, .breadcrumbs a:visited { display: inline-flex; align-items: center; min-height: 44px; color: #e7c66d; text-underline-offset: 3px; }
+.in-text-link, .in-text-link:visited, .learning-content .in-text-link, .learning-content .in-text-link:visited { color: #e7c66d; text-decoration: underline; text-underline-offset: 3px; }
+.breadcrumbs a:focus-visible, .in-text-link:focus-visible, .learning-content .in-text-link:focus-visible { outline: 3px solid #e7c66d; outline-offset: 3px; }

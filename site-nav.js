@@ -34,11 +34,13 @@ document.getElementById("startTrainingBtn")?.addEventListener("click", () => {
 });
 
 const initialPage = location.pathname.split("/")[1];
-if (["learn", "glossary", "charts"].includes(initialPage)) showSitePage(initialPage);
+if (["learn", "glossary", "charts", "privacy"].includes(initialPage)) showSitePage(initialPage);
 
 // Keep an active training round while giving each public view a crawlable URL.
 async function navigatePublicPage(path, push = true) {
     try {
+        const url = new URL(path, location.href);
+        const pagePath = url.pathname;
         const response = await fetch(path);
         if (!response.ok) throw new Error("Page unavailable");
         const html = new DOMParser().parseFromString(await response.text(), "text/html");
@@ -50,27 +52,37 @@ async function navigatePublicPage(path, push = true) {
             const attribute = selector.startsWith('link') ? 'href' : 'content';
             target.setAttribute(attribute, source.getAttribute(attribute));
         }
-        const section = path.split("/")[1] || "practice";
-        document.querySelectorAll('.topic-view').forEach(view => view.remove());
+        const section = pagePath.split("/")[1] || "practice";
+        document.querySelectorAll('.topic-view, .topic-index, [data-related-topics], .breadcrumbs, #breadcrumbData, .learning-intro').forEach(view => view.remove());
+        const sourceBreadcrumbs = html.querySelector('.breadcrumbs');
+        if (sourceBreadcrumbs) document.getElementById(`${section}Heading`).before(sourceBreadcrumbs);
+        const sourceBreadcrumbData = html.getElementById('breadcrumbData');
+        if (sourceBreadcrumbData) document.head.append(sourceBreadcrumbData);
         const sourceView = html.querySelector('.topic-view');
         if (sourceView) document.getElementById(`${section}Content`).before(sourceView);
+        const sourceEnd = html.querySelector('.topic-index, [data-related-topics]');
+        if (sourceEnd) document.getElementById(`${section}Content`).after(sourceEnd);
         const sourceHeading = html.getElementById(`${section}Heading`);
         if (sourceHeading) document.getElementById(`${section}Heading`).textContent = sourceHeading.textContent;
-        if (section === "charts" && path.split("/")[2]) {
-            document.getElementById("chartType").value = path.split("/")[2];
+        const sourceIntro = html.querySelector('.learning-intro');
+        if (sourceIntro) document.getElementById(`${section}Heading`).after(sourceIntro);
+        if (section === "charts" && pagePath.split("/")[2]) {
+            document.getElementById("chartType").value = pagePath.split("/")[2];
             document.getElementById("chartType").dispatchEvent(new Event("change"));
         }
         showSitePage(section);
+        if (url.hash) document.getElementById(url.hash.slice(1))?.scrollIntoView();
         window.dispatchEvent(new Event("publicpagechange"));
     } catch {
         location.assign(path);
     }
 }
 document.addEventListener("click", event => {
+    if (event.defaultPrevented) return;
     const link = event.target.closest('a');
-    if (!link || !/^\/(?:$|(?:learn|glossary|charts)(?:\/[a-z0-9-]+)?$)/.test(link.getAttribute("href") || "")) return;
+    if (!link || !/^\/(?:$|privacy(?:#cookie-settings)?$|(?:learn|glossary|charts)(?:\/[a-z0-9-]+)?$)/.test(link.getAttribute("href") || "")) return;
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     navigatePublicPage(link.getAttribute("href"));
 });
-window.addEventListener("popstate", () => navigatePublicPage(location.pathname, false));
+window.addEventListener("popstate", () => navigatePublicPage(location.pathname + location.hash, false));
