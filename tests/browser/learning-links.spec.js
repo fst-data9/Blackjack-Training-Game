@@ -81,7 +81,7 @@ for (const section of sections) {
         for (const path of paths) {
             const topicHtml = await (await request.get(path)).text();
             const view = topicHtml.match(/<div class="topic-view">([\s\S]*?)<\/div>/)[1];
-            expect([...view.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)].map(match => match[1])).toEqual([`/${section.name}`]);
+            expect([...view.matchAll(/<a class="topic-link"[^>]*\bhref="([^"]+)"/g)].map(match => match[1])).toEqual([`/${section.name}`]);
             expect(view).toContain(`${section.heading} →`);
             expect(topicHtml).not.toContain('class="topic-index"');
             expect(topicHtml.indexOf(`id="${section.name}Content"`)).toBeLessThan(topicHtml.indexOf("data-related-topics"));
@@ -143,11 +143,11 @@ test("glossary card links use term names and preserve their targets when filtere
     await page.goto("/glossary");
     for (const card of await page.locator(".glossary-card").all()) {
         const term = await card.locator("h2").textContent();
-        await expect(card.locator("a")).toHaveText(`${term} →`);
-        await expect(card.locator("a")).toHaveAttribute("href", `/glossary/${term.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`);
+        await expect(card.locator(":scope > .topic-link")).toHaveText(`${term} →`);
+        await expect(card.locator(":scope > .topic-link")).toHaveAttribute("href", `/glossary/${term.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`);
     }
     await page.locator("#glossarySearch").fill("Soft hand");
-    await expect(page.locator(".glossary-card a")).toHaveText("Soft hand →");
-    await page.locator(".glossary-card a").click();
+    await expect(page.locator(".glossary-card > .topic-link")).toHaveText("Soft hand →");
+    await page.locator(".glossary-card > .topic-link").click();
     await expect(page).toHaveURL(/\/glossary\/soft-hand$/);
 });
