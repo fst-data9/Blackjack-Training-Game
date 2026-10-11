@@ -2,13 +2,12 @@
 
 This is a small blackjack trainer for basic strategy practice. The browser game can run as a static page, and the optional backend records completed hands to PostgreSQL for later SQL practice and analysis.
 
-The trainer allows continued play after splitting aces, using the same actions
-as other split hands. A split hand reaching 21 automatically advances to the
-next unfinished hand; the dealer plays after all player hands finish. A split
-ace plus a ten-value card counts as regular 21, not a natural blackjack, and
-pays 1:1 on a win. This split-ace rule differs from casinos that permit only one
-card per split ace; the displayed -0.5% expected return is a rough estimate,
-not a calculation for the trainer's exact rules.
+Split aces receive exactly one more card each, with no hitting, doubling or
+re-splitting. Both hands finish before the dealer plays and settles them. A
+split ace plus a ten-value card counts as regular 21, not a natural blackjack,
+and pays 1:1 on a win. Non-ace pairs allow up to four hands and doubling after
+splitting. The displayed -0.5% expected return is a rough estimate, not a
+calculation for the trainer's exact rules.
 
 Completed rounds show a compact result overlay with the outcome, round net
 (including insurance), and accuracy for that round's decisions. Split rounds

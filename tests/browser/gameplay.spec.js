@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { splitAceScenarios } from "../gameplay-scenarios.js";
 
 test.beforeEach(async ({ page }) => {
     const errors = [];
@@ -38,22 +39,59 @@ async function deal(page, ranks) {
     await page.locator("#newGameBtn").click();
 }
 
-test("split-ace 21 advances, keeps dealer hidden, and settles both hands", async ({ page }) => {
-    await deal(page, ["A", "9", "A", "8", "K", "5", "5"]);
-    await page.locator("#splitBtn").click();
-    await expect(page.locator(".hand-panel.active")).toContainText("Hand 2");
-    await expect(page.locator("#newGameBtn")).toBeDisabled();
-    await expect(page.locator("#hitBtn")).toBeEnabled();
-    await expect(page.locator("#dealerCards img").nth(1)).toHaveAttribute("alt", "Hidden card");
-    await page.locator("#hitBtn").click();
-    await expect(page.locator("#status")).toContainText("Hand 1: WIN");
-    await expect(page.locator("#status")).toContainText("Hand 2: WIN");
-    await expect(page.locator("#bankrollAmt")).toHaveText("1040");
-    await expect(page.locator("#statsHands")).toHaveText("2");
-    await expect(page.locator("#newGameBtn")).toBeEnabled();
-    await expect.poll(() => page.savedHands.length).toBe(2);
-    expect(page.savedHands.map(hand => hand.outcome)).toEqual(["win", "win"]);
-});
+for (const fixture of splitAceScenarios) {
+    test(`split aces: ${fixture.name}`, async ({ page }) => {
+        await deal(page, fixture.cards);
+        await page.evaluate(() => {
+            const originalDealerPlay = dealerPlay;
+            window.aceDealerBoundaries = [];
+            dealerPlay = () => {
+                window.aceDealerBoundaries.push({
+                    cards: playerHands.map(hand => hand.map(card => card.rank)),
+                    done: playerHands.every(hand => hand._done),
+                    buttons: window.__BJ_TEST__.buttons(),
+                    recommendation: recommendedAction(),
+                    inRound,
+                    bankroll,
+                    recorded: sessionStats.hands,
+                    dealerHidden: document.querySelectorAll("#dealerCards img")[1].alt === "Hidden card",
+                    labels: [...document.querySelectorAll(".hand-panel")].map(panel => panel.textContent),
+                });
+                originalDealerPlay();
+            };
+        });
+        await page.locator("#splitBtn").click();
+        const boundaries = await page.evaluate(() => window.aceDealerBoundaries);
+        expect(boundaries).toHaveLength(1);
+        expect(boundaries[0]).toMatchObject({
+            cards: [["A", fixture.cards[4]], ["A", fixture.cards[5]]],
+            done: true, recommendation: null, inRound: true, bankroll: 960,
+            recorded: 0, dealerHidden: true,
+            buttons: { deal: false, hit: false, stand: false, double: false, split: false, surrender: false },
+        });
+        expect(boundaries[0].labels.every(label => label.includes("(split ace, one card)"))).toBe(true);
+        await expect(page.locator(".hand-panel")).toHaveCount(2);
+        await expect(page.locator(".hand-panel .cards img")).toHaveCount(4);
+        for (let index = 0; index < 2; index++) {
+            await expect(page.locator("#status")).toContainText(`Hand ${index + 1}: ${fixture.outcomes[index].toUpperCase()}`);
+        }
+        await expect(page.locator("#bankrollAmt")).toHaveText(String(fixture.bankroll));
+        await expect(page.locator("#dealerTotal")).toHaveText(`Total: ${fixture.dealerTotal}`);
+        await expect(page.locator("#statsHands")).toHaveText("2");
+        await expect(page.locator("#statsCorrect")).toHaveText("1 / 1");
+        await expect(page.locator("#strategyLog .strategy-feedback")).toHaveCount(1);
+        await expect(page.locator("#roundResultTitle")).not.toHaveText("Blackjack!");
+        await expect(page.locator("#roundResultStrategy")).toHaveText("All decisions correct · 1/1");
+        await expect(page.locator("#newGameBtn")).toBeEnabled();
+        for (const action of ["hit", "stand", "double", "split", "surrender"]) {
+            await expect(page.locator(`#${action}Btn`)).toBeDisabled();
+        }
+        await expect.poll(() => page.savedHands.length).toBe(2);
+        expect(page.savedHands.map(hand => hand.outcome)).toEqual(fixture.outcomes);
+        expect(page.savedHands.map(hand => hand.payoutCents)).toEqual(fixture.nets);
+        expect(page.savedHands.every(hand => hand.didSplit && !hand.didDouble && hand.betCents === 2000)).toBe(true);
+    });
+}
 
 test("both split aces at 21 settle without leaving controls stuck", async ({ page }) => {
     await deal(page, ["A", "9", "A", "8", "10", "J"]);
@@ -64,6 +102,18 @@ test("both split aces at 21 settle without leaving controls stuck", async ({ pag
     await expect(page.locator("#bankrollAmt")).toHaveText("1040");
     await expect(page.locator("#roundResultDetails")).toHaveText("2 won");
     await expect(page.locator("#roundResultStrategy")).toHaveText("All decisions correct · 1/1");
+});
+
+test("split-ace 21 is a normal win in the review page", async ({ page }) => {
+    await deal(page, ["A", "A", "A", "6", "K", "7"]);
+    await page.locator("#insuranceBtn").click();
+    await page.locator("#splitBtn").click();
+    await expect(page.locator("#bankrollAmt")).toHaveText("1030");
+    await expect(page.locator("#roundResultTitle")).toHaveText("Split results");
+    await expect(page.locator("#roundResultDetails")).toHaveText("2 won");
+    await page.locator("#openReviewBtn").click();
+    await expect(page.locator("#reviewHands h2")).toHaveText("Round 1, Hand 1 - WIN");
+    await expect(page.locator("#reviewHands")).not.toContainText("BLACKJACK");
 });
 
 test("navigation and introductory deal button work through served scripts", async ({ page }) => {
@@ -178,9 +228,9 @@ test("learning pages preserve the round and serve interactive quiz, glossary and
     await page.locator(".quiz-choices").getByRole("button", { name: "Surrender", exact: true }).click();
     await expect(page.locator(".quiz-feedback")).toContainText("Nice decision!");
     await page.locator('[data-placeholder-page="glossary"]').click();
-    await page.locator("#glossarySearch").fill("keep playing");
+    await page.locator("#glossarySearch").fill("Split aces get");
     await expect(page.locator(".glossary-card")).toHaveCount(1);
-    await expect(page.locator(".glossary-card")).toContainText("keep playing after splitting aces");
+    await expect(page.locator(".glossary-card")).toContainText("no hitting, doubling or re-splitting");
     await page.locator('[data-placeholder-page="charts"]').click();
     await page.locator("#chartType").selectOption("soft");
     await page.locator("#chartDouble").uncheck();
