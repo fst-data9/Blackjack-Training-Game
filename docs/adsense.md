@@ -2,8 +2,8 @@
 
 Live ads remain disabled, including when public identifiers are configured.
 `readAdSenseConfig` always returns `enabled: false`. Anonymous practice remains
-free. Activation requires the separate Google CMP work and Aaron's AdSense
-approval; this change prepares manual placements and tests only.
+free. Google's CMP adapter and manual placements are prepared, but activation
+still requires Aaron's dashboard setup, privacy review and AdSense approval.
 
 This free strategy trainer has no cash wagers or prizes. Google's
 [publisher gambling restriction](https://support.google.com/publisherpolicies/answer/10437963?hl=en)
@@ -60,16 +60,106 @@ not support a fixed rolling ad-domain list. These permissions are conditional
 on the backend gate and are not active in this PR. Object, inline-handler and
 frame-ancestor restrictions remain in both states.
 
-Before activation, implement/test the selected certified CMP (including decline
-and revocation), obtain site/account approval and slot identifiers, and configure
-`/ads.txt` from the account-provided seller record. Publish an accurate privacy
+Before activation, verify the published Google CMP (including decline and
+revocation), obtain site/account approval and slot identifiers, and confirm
+the `/ads.txt` seller record matches the AdSense account. Publish an accurate privacy
 policy describing cookies, Google/third-party advertising data use, account data,
 contact details and retention choices. Google's
 [consent requirements](https://support.google.com/adsense/answer/13554116?hl=en)
 and [CMP setup](https://support.google.com/adsense/answer/7670013?hl=en) cover
 EEA/UK/Switzerland traffic. A generic local cookie banner is not a substitute.
-A reviewed CMP adapter will emit `adsenseconsent` with boolean detail only when
-ad requests are permitted. The event alone cannot activate ads in this version.
+The CMP adapter emits `adsenseconsent` with boolean detail when TC data is ready.
+The event alone cannot activate ads in this version.
+
+## ads.txt seller record
+
+The root-level `ads.txt` file is included in the server image and served at
+`/ads.txt` as plain text with no sign-in required. It uses Aaron's public
+publisher ID, matching the existing AdSense account meta tag:
+
+```text
+google.com, pub-8578826503018521, DIRECT, f08c47fec0942fa0
+```
+
+This follows [Google's ads.txt guide](https://support.google.com/adsense/answer/12171612?hl=en).
+The publisher uses `pub-` here rather than the meta tag's `ca-pub-` prefix.
+Publishing this file does not enable the site's ad loader or CMP. After this
+change reaches the live site, verify `https://blackjack-trainer.co/ads.txt`
+against the account's snippet and use **AdSense → Sites → Check for updates**.
+Google's status changes after it fetches the file; a PR alone does not update
+the live site's “Not found” status.
+
+## Google consent integration
+
+`consent.js` starts only after `adsense.js` has read an explicitly enabled
+`/adsense-config` response with a valid public publisher ID. It loads Google's
+Funding Choices bootstrap (`https://fundingchoicesmessages.google.com/i/pub-…?ers=1`)
+before any AdSense script, copies the response nonce and adds Google's hidden
+`googlefcPresent` marker to avoid a second CMP bootstrap. No Google CMP namespace,
+marker, request or consent banner is created with ads disabled. Missing or
+unpublished messages, blocked scripts and API failures leave ads unavailable;
+the game, sign-in and learning views never await consent.
+
+The adapter subscribes through `googlefc.callbackQueue` using
+`CONSENT_API_READY`, then calls `__tcfapi('addEventListener', 2, …)`.
+`tcloaded` and `useractioncomplete` allow ads only after a successful callback
+with `cmpStatus: 'loaded'`, a known jurisdiction and a nonempty TC string.
+A successful `gdprApplies: false` also allows ads; the IAB permits this reduced
+response to omit the status and TC-string fields. Explicit stub/loading/error
+states never allow ads. `cmpuishown` pauses ads while the visitor chooses.
+Google reads the TC string and decides between personalised, non-personalised
+and limited ads. A completed refusal is readiness, not agreement to personalise.
+
+Five seconds is our fail-closed **loading** deadline, not a Google requirement
+or a deadline for the visitor. Once a working CMP displays its UI, the visitor
+can take as long as needed. A load failure stays closed for the document, even
+if a delayed callback arrives. “Privacy and cookie settings” queues Google's
+`showRevocationMessage()` and pauses ads until an updated choice arrives. With
+ads off or no working CMP, that visible footer link opens `/privacy#cookie-settings`.
+
+Documentation reviewed on 2026-10-11:
+
+- [Google's TCF troubleshooting](https://support.google.com/adsense/answer/9999955?hl=en)
+  currently describes TCF v2.3. It requires usable TC data and reports empty
+  strings and stub/loading/error statuses as errors, so the adapter is stricter
+  than the brief's status-only mapping. Google no longer mandates a response
+  timeout; the five-second deadline is this site's conservative choice.
+- [Google's Privacy & messaging API](https://developers.google.com/funding-choices/fc-api-docs)
+  documents the callback queue and revocation method. It normally deploys EU
+  messages through an existing AdSense/GPT tag. This brief requires the CMP
+  **before** `adsbygoogle.js`, so we use a separate Funding Choices bootstrap.
+  That ordering is an integration assumption which Aaron must verify against
+  the account-provided tag and published message before enabling ads; the
+  public documentation does not promise a standalone GDPR bootstrap contract.
+- [IAB CMP API specification](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20CMP%20API%20v2.md)
+  specifies integer API version `2` and the reduced outside-GDPR TCData object.
+  This API version does not pin Google's consent strings to TCF policy v2.0.
+
+### Aaron's dashboard and privacy steps before activation
+
+1. Review `/privacy`, confirm the owner contact `blackjack-trainer-admin@proton.me`
+   supplied by Aaron, and confirm the actual handling and retention
+   of account and practice data. This draft is for review, **not legal advice**
+   or legal sign-off. Update its “advertising is currently disabled” wording if
+   activation is approved later.
+2. In AdSense **Privacy & messaging → European regulations**, create and publish
+   the message for `blackjack-trainer.co`. Set its privacy-policy URL to
+   `https://blackjack-trainer.co/privacy`. Confirm the vendor settings include
+   Google Advertising Products and the current TCF version.
+3. Compare the account's Google Funding Choices tag with the prepared bootstrap
+   and presence marker. Validate the published message in a controlled future
+   integration check, including EEA/UK/Switzerland and outside-region responses,
+   refusal, saved choices, settings/revocation, blocked or unpublished messages,
+   and CSP reporting. All automated tests here use local stubs, not Google.
+4. Choose and preview the message layout in Google's dashboard at 375px and
+   768px (and desktop), including opening settings during a hand. The banner is
+   rendered by Google; its placement cannot be reliably changed with site CSS
+   or this documented API. Select a format that keeps game controls clear. No
+   real banner geometry has been verified in this disabled implementation.
+   Google's published-message preview supports `?fc=alwaysshow&fctype=gdpr`.
+5. Keep ads disabled until all account/site, seller-record, consent and privacy
+   prerequisites have been approved. US state privacy messages are a separate
+   follow-up; this adapter implements the European TCF flow only.
 
 Check real integration with CSP reporting, device layouts, empty inventory,
 ad blockers, network failures, consent and repeated navigation before launch.
@@ -85,12 +175,18 @@ manual units only and does not add the Auto ads snippet.
 ## Verification and previews
 
 `npm run test:ads` checks identifier validation, the permanent disabled gate,
-both CSP states and script nonces. `npm run test:browser` also runs these tests
-and the learning unit suite before browser checks. Placement tests force enabled
+both CSP states and script nonces. `npm run test:consent` uses a fake TCF API and
+clock for readiness, outside-region data, refused choices, errors, deadlines and
+revocation. `npm run test:browser` runs both unit suites and the learning unit
+suite before browser checks. Placement tests force enabled
 configuration and consent only through local stubs: all external requests are
 intercepted and no real Google ad calls are made. They cover placement order,
 spacing at 375/768/1280px, active rounds, reserved height, filtering, failures,
-unfilled units and consent revocation. Existing gameplay and SEO tests still run.
+unfilled units and consent revocation. Those placement tests isolate the CMP
+adapter and inject consent explicitly. Separate CMP browser tests run the real
+adapter with Google's bootstrap stubbed locally, checking script ordering,
+revocation, failures, disabled behaviour, privacy metadata and navigation.
+Existing gameplay and SEO tests still run.
 
 [Desktop/mobile placeholder screenshots](ad-placements/README.md) show every
 page and all four placements. To reproduce with the local Playwright setup:

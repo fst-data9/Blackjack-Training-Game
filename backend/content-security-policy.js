@@ -29,7 +29,10 @@ export function contentSecurityDirectives(config, production) {
     // allowlist. HTTPS ad frames/images/connections may use changing domains.
     // https://support.google.com/adsense/answer/16283098
     directives.scriptSrc = [(_req, res) => `'nonce-${res.locals.adSenseNonce}'`, "'strict-dynamic'", "'unsafe-inline'", "'unsafe-eval'", 'https:', 'http:'];
-    for (const directive of ['connectSrc', 'frameSrc', 'imgSrc']) directives[directive].push('https:');
+    const cmpOrigins = ['https://fundingchoicesmessages.google.com', 'https://fundingchoices.google.com'];
+    directives.scriptSrc.push(...cmpOrigins);
+    directives.styleSrc.push(...cmpOrigins);
+    for (const directive of ['connectSrc', 'frameSrc', 'imgSrc']) directives[directive].push('https:', ...cmpOrigins);
   }
   return directives;
 }

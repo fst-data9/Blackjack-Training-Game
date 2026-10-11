@@ -1366,6 +1366,41 @@
             <h1 id="chartsHeading" tabindex="-1">Charts</h1>
             <div id="chartsContent"></div>
         </section>
+        <section class="placeholder-page privacy-page learning-content" data-placeholder-content="privacy" hidden aria-labelledby="privacyHeading">
+            <h1 id="privacyHeading" tabindex="-1">Privacy policy</h1>
+            <div id="privacyContent">
+                <p>This policy describes how Blackjack Trainer handles information when you practise, browse lessons or use an optional account.</p>
+                <article class="learning-card">
+                    <h2>Accounts and sign-in</h2>
+                    <p>You can practise without an account. If you create one, we store your email address, display name and account dates. Password sign-in stores a salted password hash. Google sign-in uses your verified email, name and Google account identifier to connect your account.</p>
+                    <p>A sign-in cookie keeps you logged in. Authentication and security records help us protect accounts and prevent abuse. If enabled for signup, Cloudflare Turnstile checks for automated traffic.</p>
+                </article>
+                <article class="learning-card">
+                    <h2>Practice sessions and statistics</h2>
+                    <p>We record practice session identifiers, browser information, hands, cards, decisions, outcomes and aggregate statistics such as decision accuracy and simulated returns. These records support training feedback and progress. When you sign in, your practice session can be linked to your account.</p>
+                    <p>The trainer uses simulated chips. It does not accept wagers or payment details.</p>
+                </article>
+                <article class="learning-card">
+                    <h2>Cloudflare Web Analytics</h2>
+                    <p>We use Cloudflare Web Analytics to understand visits and page performance. Cloudflare describes this service as using no analytics cookies or local storage and no individual visitor fingerprinting. This analytics service is separate from advertising and continues when ads are disabled.</p>
+                    <p>Read <a href="https://developers.cloudflare.com/web-analytics/about/">Cloudflare’s Web Analytics information</a> and <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s privacy policy</a> for more details.</p>
+                </article>
+                <article class="learning-card">
+                    <h2>Google AdSense and advertising cookies</h2>
+                    <p>Advertising is currently disabled. If enabled, Google AdSense and its advertising partners may use cookies or similar storage to deliver and measure advertisements, prevent fraud and, where permitted by your choices, personalise ads. Google may process information such as your IP address, browser, visits and interactions.</p>
+                    <p>When advertising is enabled, Google’s Privacy &amp; messaging consent tool handles applicable European consent choices and stores your choice. Google’s ad system reads those choices to determine whether personalised, non-personalised or limited ads may be served. Declining personalisation does not necessarily remove every advertisement.</p>
+                    <p>Learn <a href="https://policies.google.com/technologies/partner-sites">how Google uses information from sites that use its services</a> and how to manage preferences at <a href="https://myadcenter.google.com/">Google My Ad Center</a>.</p>
+                </article>
+                <article class="learning-card" id="cookie-settings">
+                    <h2>Your privacy and cookie settings</h2>
+                    <p>Use “Privacy and cookie settings” in the footer to reopen Google’s consent choices when advertising and the consent tool are available. With advertising disabled or the tool unavailable, the link opens this policy instead. You can also manage stored cookies through your browser settings; clearing the sign-in cookie signs you out.</p>
+                </article>
+                <article class="learning-card">
+                    <h2>Contact and your information</h2>
+                    <p>Contact the site owner at <a href="mailto:blackjack-trainer-admin@proton.me">blackjack-trainer-admin@proton.me</a> with privacy questions or requests to access, correct or delete your account and practice information.</p>
+                </article>
+            </div>
+        </section>
         <section class="placeholder-page" data-placeholder-content="share" hidden>
             <h1>Share</h1>
             <p>Shareable training summaries and progress cards will be available here soon.</p>
@@ -1425,6 +1460,7 @@
 
     <script src="blackjack-game.js"></script>
     <script src="auth.js"></script>
+    <script src="consent.js"></script>
     <script src="adsense.js"></script>
     <script src="site-nav.js"></script>
     <script src="learning-content.cjs"></script>
@@ -1433,6 +1469,7 @@
 
     <footer class="credits">
         <p><a href="/">Practice blackjack</a> · <a href="/learn">Learn blackjack</a> · <a href="/glossary">Blackjack glossary</a> · <a href="/charts">Basic strategy charts</a></p>
+        <p><a href="/privacy">Privacy policy</a> · <a id="privacySettingsLink" href="/privacy#cookie-settings">Privacy and cookie settings</a></p>
         <em>
             Playing cards thanks to<br>
             Vectorized Playing Cards 1.3 –

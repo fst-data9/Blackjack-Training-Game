@@ -12,6 +12,7 @@ const pages = {
   learn: ["Learn Blackjack Rules & Basic Strategy | Blackjack Trainer", "Learn blackjack rules, card values, hitting, standing, doubling, splitting and surrender. Test your decisions with a free basic strategy quiz.", "Learn blackjack", "Learn the rules and practise choosing when to hit, stand, double, split or surrender. Basic strategy improves decisions over many hands; it does not guarantee a profit."],
   glossary: ["Blackjack Glossary | Card & Strategy Terms Explained", "Understand blackjack terms including soft and hard hands, bust, push, insurance, splitting and late surrender with our free blackjack glossary.", "Blackjack glossary", "Explore the language of blackjack, from soft hands and pairs to insurance and late surrender."],
   charts: ["Blackjack Basic Strategy Charts | Free Interactive Guide", "Explore interactive blackjack basic strategy charts for hard hands, soft hands and pairs, with dealer stands on soft 17 and late surrender.", "Blackjack basic strategy charts", "Explore opening-hand recommendations for hard hands, soft hands and pairs. These charts use the trainer’s fixed rules; optimal strategy depends on the table rules."],
+  privacy: ["Privacy Policy | Blackjack Trainer", "How Blackjack Trainer handles account data, practice statistics, Cloudflare Web Analytics and Google advertising cookies.", "Privacy policy"],
 };
 
 export function renderLinkedText(text, state) {
@@ -21,7 +22,7 @@ export function renderLinkedText(text, state) {
 }
 
 export function renderBreadcrumbs(page) {
-  const crumbs = content.breadcrumbs(page);
+  const crumbs = page === 'privacy' ? [{ title: 'Home', href: '/' }, { title: 'Privacy policy', href: '/privacy' }] : content.breadcrumbs(page);
   const markup = `<nav class="breadcrumbs" aria-label="Breadcrumb"><ol>${crumbs.map((crumb, index) =>
     `<li>${index === crumbs.length - 1 ? `<span aria-current="page">${escape(crumb.title)}</span>` : `<a href="${escape(crumb.href)}">${escape(crumb.title)}</a>`}</li>`).join("")}</ol></nav>`;
   const data = {
@@ -41,6 +42,19 @@ export function renderSeoPage(template, page) {
   const topic = topics[page];
   const [title, description, heading, intro] = topic
     ? [`${topic.title} | Blackjack Trainer`, topic.body, topic.title, topic.body] : pages[page];
+  const shell = template
+    .replace("<head>", '<head><base href="/">')
+    .replaceAll(practiceTitle, escape(title))
+    .replaceAll(practiceDescription, escape(description))
+    .replaceAll(`${origin}/"`, `${origin}/${page}"`)
+    .replace('<main id="gamePage">', '<main id="gamePage" hidden>')
+    .replace('<main id="placeholderPages" hidden>', '<main id="placeholderPages">')
+    .replace(`data-placeholder-content="${section}" hidden`, `data-placeholder-content="${section}"`)
+    .replace(' data-placeholder-page="practice" aria-current="page"', ' data-placeholder-page="practice"')
+    .replace(`data-placeholder-page="${section}"`, `data-placeholder-page="${section}" aria-current="page"`);
+  const breadcrumbs = renderBreadcrumbs(page);
+  const withBreadcrumbData = html => html.replace("</head>", `<script id="breadcrumbData" type="application/ld+json">${breadcrumbs.json}</script></head>`);
+  if (page === 'privacy') return withBreadcrumbData(shell.replace('<h1 id="privacyHeading"', `${breadcrumbs.markup}<h1 id="privacyHeading"`));
   const entries = Object.entries(topics).filter(([path]) => path.startsWith(`${section}/`));
   const indexHeading = content.sections[section].indexHeading;
   const links = `<nav aria-label="${escape(indexHeading)}"><ul>${entries.map(([path, entry]) => `<li><a class="topic-link" href="/${path}">${escape(entry.title)}</a></li>`).join("")}</ul></nav>`;
@@ -50,22 +64,12 @@ export function renderSeoPage(template, page) {
   const initial = topic ? renderArticle(topic, state) : entries.map(([, entry]) =>
     renderArticle(entry, content.createLinkState('', section === 'glossary' ? 2 : 5, state.seen), true)).join("");
   const related = topic ? `<section class="related-topics" data-related-topics aria-labelledby="relatedTopicsHeading"><h2 id="relatedTopicsHeading">Related topics</h2><nav aria-label="Related topics"><ul>${topic.related.map(path => `<li><a class="topic-link" href="/${path}">${escape(topics[path].title)}</a></li>`).join("")}</ul></nav></section>` : "";
-  const breadcrumbs = renderBreadcrumbs(page);
-  return template
-    .replace("<head>", '<head><base href="/">')
-    .replaceAll(practiceTitle, escape(title))
-    .replaceAll(practiceDescription, escape(description))
-    .replaceAll(`${origin}/"`, `${origin}/${page}"`)
-    .replace('<main id="gamePage">', '<main id="gamePage" hidden>')
-    .replace('<main id="placeholderPages" hidden>', '<main id="placeholderPages">')
-    .replace(`data-placeholder-content="${section}" hidden`, `data-placeholder-content="${section}"`)
+  return withBreadcrumbData(shell
     .replace(`<h1 id="${section}Heading" tabindex="-1">${content.sections[section].title}</h1>`, `${breadcrumbs.markup}<h1 id="${section}Heading" tabindex="-1">${escape(heading)}</h1>${topic ? '' : `<p class="learning-intro">${escape(intro)}</p>`}`)
     .replace(`<div id="${section}Content"></div>`, topic
       ? `<div class="topic-view">${initial}</div><div id="${section}Content"></div>${related}`
       : `<div id="${section}Content">${initial}</div>${topicIndex}`)
-    .replace(' data-placeholder-page="practice" aria-current="page"', ' data-placeholder-page="practice"')
-    .replace(`data-placeholder-page="${section}"`, `data-placeholder-page="${section}" aria-current="page"`)
-    .replace("</head>", `<script id="breadcrumbData" type="application/ld+json">${breadcrumbs.json}</script></head>`);
+  );
 }
 
 export function registerSeoRoutes(app, frontendRoot) {

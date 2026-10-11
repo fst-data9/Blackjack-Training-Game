@@ -7,7 +7,7 @@ export const adConfig = {
     slots: { 'learning-end': '1111111111', 'learning-incontent': '2222222222', 'game-below-stats': '3333333333', 'review-summary': '4444444444' },
 };
 
-export async function stubAds(page, { config = adConfig, autoFill = true, failure = '', scriptGate, configGate } = {}) {
+export async function stubAds(page, { config = adConfig, autoFill = true, failure = '', scriptGate, configGate, realConsent = false } = {}) {
     const errors = [];
     const violations = [];
     let loads = 0;
@@ -26,6 +26,9 @@ export async function stubAds(page, { config = adConfig, autoFill = true, failur
                 if (configGate) await configGate;
                 return route.fulfill({ json: config });
             }
+            // Placement tests inject consent explicitly. CMP integration tests
+            // opt into the actual adapter and intercept Google's bootstrap too.
+            if (url.pathname === '/consent.js' && !realConsent) return route.fulfill({ contentType: 'application/javascript', body: '' });
             if (request.resourceType() === 'document' && config.enabled) {
                 const response = await route.fetch();
                 return route.fulfill({ response, headers: { ...response.headers(), 'content-security-policy': csp }, body: withScriptNonce(await response.text(), nonce) });
@@ -37,6 +40,7 @@ export async function stubAds(page, { config = adConfig, autoFill = true, failur
             if (scriptGate) await scriptGate;
             if (failure === 'script') return route.abort();
             return route.fulfill({ contentType: 'application/javascript', body: `
+                window.cmpOrder?.push('ads:loaded');
                 window.adStub = { requests: [], nonce: document.currentScript.nonce, fill(unit) {
                     const placeholder = document.createElement('div');
                     placeholder.style.cssText = 'height:280px;box-sizing:border-box;background:#e4e4e4;color:#333;display:grid;place-items:center;font:16px sans-serif';

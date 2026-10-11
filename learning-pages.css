@@ -1,6 +1,9 @@
 [hidden] { display: none !important; }
-.learning-page { width: min(100% - 32px, 1040px); text-align: left; }
-.learning-page > h1 { font-size: clamp(2rem, 5vw, 3rem); }
+.learning-page, .privacy-page { width: min(100% - 32px, 1040px); text-align: left; }
+.learning-page > h1, .privacy-page > h1 { font-size: clamp(2rem, 5vw, 3rem); }
+.privacy-page p { max-width: none; overflow-wrap: anywhere; }
+.privacy-page a { text-decoration: underline; }
+.credits p a { display: inline-block; min-height: 44px; line-height: 44px; }
 .learning-content > h2 { color: #fff4cf; font-size: 1.5rem; }
 .learning-content a { color: #f5d36f; }
 .learning-content :is(button, select, a, .chart-scroll):focus-visible { outline: 3px solid #f5d36f; outline-offset: 3px; }
