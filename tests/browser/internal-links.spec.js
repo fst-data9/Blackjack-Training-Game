@@ -64,12 +64,12 @@ test('HTML anchor crawl from home reaches every sitemap URL', async ({ request }
         const html = await response.text();
         for (const match of html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)) {
             const url = new URL(match[1], origin + path);
-            if (url.origin === origin && /^\/(?:$|(?:learn|glossary|charts)(?:\/[a-z0-9-]+)?$)/.test(url.pathname) && !visited.has(url.pathname)) pending.push(url.pathname);
+            if (url.origin === origin && /^\/(?:$|privacy$|(?:learn|glossary|charts)(?:\/[a-z0-9-]+)?$)/.test(url.pathname) && !visited.has(url.pathname)) pending.push(url.pathname);
         }
     }
     const sitemap = await (await request.get('/sitemap.xml')).text();
     const paths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => new URL(match[1]).pathname);
-    expect(paths).toHaveLength(35);
+    expect(paths).toHaveLength(36);
     expect([...visited].sort()).toEqual(paths.sort());
 });
 

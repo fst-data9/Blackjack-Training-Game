@@ -781,6 +781,7 @@ app.get("/auth.js", (req, res) => res.sendFile(path.join(frontendRoot, "auth.js"
 app.get("/site-nav.js", (req, res) => res.sendFile(path.join(frontendRoot, "site-nav.js")));
 app.get("/learning-content.cjs", (req, res) => res.type("application/javascript").sendFile(path.join(frontendRoot, "learning-content.cjs")));
 app.get("/adsense.js", (req, res) => res.sendFile(path.join(frontendRoot, "adsense.js")));
+app.get("/consent.js", (req, res) => res.sendFile(path.join(frontendRoot, "consent.js")));
 app.get("/adsense-config", (req, res) => res.json(adSenseConfig));
 app.get("/learning-pages.js", (req, res) => res.sendFile(path.join(frontendRoot, "learning-pages.js")));
 app.get("/learning-pages.css", (req, res) => res.sendFile(path.join(frontendRoot, "learning-pages.css")));

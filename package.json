@@ -12,7 +12,8 @@
     "test:integration": "node tests/integration-api.js",
     "test:learning": "node --test tests/learning-content.test.js",
     "test:ads": "node --test tests/ad-placements.test.js",
-    "test:browser": "npm run test:learning && npm run test:ads && playwright test"
+    "test:consent": "node --test tests/consent.test.js",
+    "test:browser": "npm run test:learning && npm run test:ads && npm run test:consent && playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0"

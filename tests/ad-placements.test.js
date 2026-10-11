@@ -49,7 +49,7 @@ function header(enabled, production = false, nonce = 'nonce-for-test') {
 test('disabled CSP preserves all current restrictions and admits no advertising origins', () => {
     const disabled = header(false);
     assert.equal(disabled, "default-src 'self';base-uri 'self';font-src 'self' data:;form-action 'self';frame-ancestors 'none';img-src 'self' data: https://*.googleusercontent.com;object-src 'none';script-src 'self' https://accounts.google.com https://challenges.cloudflare.com https://static.cloudflareinsights.com/beacon.min.js;script-src-attr 'none';style-src 'self' 'unsafe-inline' https://accounts.google.com;connect-src 'self' https://accounts.google.com https://challenges.cloudflare.com https://cloudflareinsights.com/cdn-cgi/rum;frame-src 'self' https://accounts.google.com https://challenges.cloudflare.com");
-    assert.doesNotMatch(disabled, /googlesyndication|doubleclick|googleadservices|nonce-|strict-dynamic|unsafe-eval/);
+    assert.doesNotMatch(disabled, /fundingchoices|googlesyndication|doubleclick|googleadservices|nonce-|strict-dynamic|unsafe-eval/);
     assert.equal(adSenseNonce({ enabled: false }), undefined);
     assert.ok(header(false, true).includes('upgrade-insecure-requests'));
 });
@@ -59,6 +59,11 @@ test('enabled CSP follows Google strict nonce guidance and allows HTTPS ad resou
     assert.match(enabled, /script-src 'nonce-nonce-for-test' 'strict-dynamic' 'unsafe-inline' 'unsafe-eval' https: http:/);
     for (const directive of ['connect-src', 'frame-src', 'img-src']) {
         assert.ok(enabled.match(new RegExp(`${directive} ([^;]+)`))[1].split(' ').includes('https:'));
+    }
+    for (const directive of ['script-src', 'connect-src', 'frame-src', 'img-src', 'style-src']) {
+        const sources = enabled.match(new RegExp(`${directive} ([^;]+)`))[1].split(' ');
+        assert.ok(sources.includes('https://fundingchoicesmessages.google.com'));
+        assert.ok(sources.includes('https://fundingchoices.google.com'));
     }
     assert.match(enabled, /object-src 'none'/);
     assert.match(enabled, /script-src-attr 'none'/);

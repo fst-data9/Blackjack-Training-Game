@@ -144,6 +144,7 @@
             if (!/^ca-pub-\d{16}$/.test(value.publisher) || !value.slots || typeof value.slots !== 'object') return;
             config = { enabled: value.enabled === true, publisher: value.publisher, slots: {} };
             definitions.forEach(({ key }) => { config.slots[key] = /^\d{10}$/.test(value.slots[key]) ? value.slots[key] : ''; });
+            window.BlackjackConsent?.start(config);
             place();
         }).catch(() => {});
     };
