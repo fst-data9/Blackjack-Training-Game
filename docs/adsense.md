@@ -119,8 +119,8 @@ Documentation reviewed on 2026-10-11:
 
 ### Aaron's dashboard and privacy steps before activation
 
-1. Review `/privacy`, replace the literal `{{CONTACT_EMAIL}}` in `index.html`
-   with a working owner contact, and confirm the actual handling and retention
+1. Review `/privacy`, confirm the owner contact `blackjack-trainer-admin@proton.me`
+   supplied by Aaron, and confirm the actual handling and retention
    of account and practice data. This draft is for review, **not legal advice**
    or legal sign-off. Update its “advertising is currently disabled” wording if
    activation is approved later.

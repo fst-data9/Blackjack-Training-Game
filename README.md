@@ -189,5 +189,5 @@ terms; inclusion in the sitemap does not guarantee indexing.
 AdSense placements and a consent-gated loader are prepared but live serving is
 blocked pending account review, publisher IDs, privacy review and publication
 of Google's consent message. The `/privacy` draft and Google CMP adapter are
-prepared; the contact placeholder and dashboard steps still need Aaron's review.
+prepared; the privacy wording and dashboard steps still need Aaron's review.
 See [AdSense preparation](docs/adsense.md).

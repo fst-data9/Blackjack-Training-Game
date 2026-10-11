@@ -150,7 +150,8 @@ test('privacy renders without JavaScript, has canonical metadata and appears in 
         await expect(page.locator('#gamePage')).toBeHidden();
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://blackjack-trainer.co/privacy');
         await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', 'https://blackjack-trainer.co/privacy');
-        await expect(page.locator('#privacyContent')).toContainText('{{CONTACT_EMAIL}}');
+        await expect(page.locator('#privacyContent')).toContainText('blackjack-trainer-admin@proton.me');
+        await expect(page.locator('#privacyContent a[href="mailto:blackjack-trainer-admin@proton.me"]')).toBeVisible();
         for (const heading of ['Accounts and sign-in', 'Practice sessions and statistics', 'Cloudflare Web Analytics', 'Google AdSense and advertising cookies', 'Contact and your information']) {
             await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
         }
