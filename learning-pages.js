@@ -165,6 +165,7 @@ function learningPageLinkState(section) {
                 results.append(card);
             });
             if (!matches.length) results.append(make('p', 'No matching terms. Try a shorter search or choose All.', 'glossary-empty'));
+            window.dispatchEvent(new Event('glossaryresultschange'));
         };
         ['All', 'Cards', 'Actions', 'Table', 'Strategy'].forEach(group => {
             const button = make('button', group, 'learning-button');
