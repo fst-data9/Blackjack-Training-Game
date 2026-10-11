@@ -96,9 +96,14 @@
 .lesson-card > .topic-link, .glossary-card > .topic-link { margin-top: 14px; }
 .topic-link:is(:hover, :focus-visible), .learning-content .topic-link:is(:hover, :focus-visible) { color: #e7c66d; border-color: #e7c66d; }
 .topic-link:focus-visible, .learning-content .topic-link:focus-visible, .topic-index summary:focus-visible { outline: 3px solid #e7c66d; outline-offset: 3px; }
-.ad-placement { margin: 160px auto 40px; width: 100%; min-height: 320px; text-align: center; }
-.ad-placement p { font-size: .75rem; color: #b8cec0; }
-.ad-placement ins { display: block; min-height: 280px; }
+.ad-placement { box-sizing: border-box; margin: 160px auto 40px; width: 100%; min-height: 320px; text-align: center; }
+.ad-placement p { margin: 0 0 12px; font-size: .75rem; line-height: 20px; color: #b8cec0; }
+.ad-placement ins { display: block; height: 280px; min-height: 280px; text-decoration: none; }
+#reviewPage .ad-placement p { color: #52625a; }
+.ad-placement[data-placement='learning-incontent'], .ad-placement[data-placement='review-summary'] { margin-bottom: 160px; }
+.glossary-grid > .ad-placement { grid-column: 1 / -1; }
+#gamePage > .ad-placement { display: block; clear: both; margin-bottom: 160px; }
+.ad-placement[data-suppressed] { visibility: hidden; }
 
 .breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; margin: 0 0 12px; padding: 0; list-style: none; color: #fff4cf; }
 .breadcrumbs li { display: flex; align-items: center; gap: 10px; min-height: 44px; min-width: 0; overflow-wrap: anywhere; }

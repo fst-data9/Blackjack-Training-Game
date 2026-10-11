@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import content from "../learning-content.cjs";
+import { withScriptNonce } from "./content-security-policy.js";
 
 const escape = text => text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;");
 const topics = content.topics;
@@ -70,7 +71,7 @@ export function renderSeoPage(template, page) {
 export function registerSeoRoutes(app, frontendRoot) {
   const template = readFileSync(`${frontendRoot}/index.html`, "utf8");
   for (const page of [...Object.keys(pages), ...Object.keys(topics)]) {
-    app.get(`/${page}`, (req, res) => res.type("html").send(renderSeoPage(template, page)));
+    app.get(`/${page}`, (req, res) => res.type("html").send(withScriptNonce(renderSeoPage(template, page), res.locals.adSenseNonce)));
   }
   app.get("/robots.txt", (req, res) => res.sendFile(`${frontendRoot}/robots.txt`));
   app.get("/sitemap.xml", (req, res) => res.type("application/xml").send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${["", ...Object.keys(pages), ...Object.keys(topics)].map(path => `<url><loc>${origin}/${path}</loc></url>`).join("")}</urlset>`));

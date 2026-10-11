@@ -1,5 +1,6 @@
 import express from "express";
 import { readAdSenseConfig } from "./adsense-config.js";
+import { adSenseNonce, contentSecurityDirectives, withScriptNonce } from "./content-security-policy.js";
 import { registerSeoRoutes } from "./seo-pages.js";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -8,6 +9,7 @@ import crypto from "node:crypto";
 import { promisify } from "node:util";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 import { OAuth2Client } from "google-auth-library";
 import helmet from "helmet";
 import { readSecurityConfig } from "./security-config.js";
@@ -27,26 +29,17 @@ if (trustProxyHops > 0) {
   app.set("trust proxy", trustProxyHops);
 }
 
+app.use((req, res, next) => {
+  res.locals.adSenseNonce = adSenseNonce(adSenseConfig);
+  next();
+});
 app.use(helmet({
   frameguard: { action: "deny" },
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   strictTransportSecurity: process.env.NODE_ENV === "production" ? undefined : false,
   contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      baseUri: ["'self'"],
-      connectSrc: ["'self'", "https://accounts.google.com", "https://challenges.cloudflare.com", "https://cloudflareinsights.com/cdn-cgi/rum"],
-      fontSrc: ["'self'", "data:"],
-      formAction: ["'self'"],
-      frameAncestors: ["'none'"],
-      frameSrc: ["'self'", "https://accounts.google.com", "https://challenges.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "https://*.googleusercontent.com"],
-      objectSrc: ["'none'"],
-      scriptSrc: ["'self'", "https://accounts.google.com", "https://challenges.cloudflare.com", "https://static.cloudflareinsights.com/beacon.min.js"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
-      upgradeInsecureRequests: process.env.NODE_ENV === "production" ? [] : null,
-    },
+    directives: contentSecurityDirectives(adSenseConfig, process.env.NODE_ENV === "production"),
   },
 }));
 app.use((req, res, next) => {
@@ -780,7 +773,9 @@ app.use("/api", (req, res) => {
 // locally in the same way they will on the deployed website.
 const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 registerSeoRoutes(app, frontendRoot);
-app.get("/", (req, res) => res.sendFile(path.join(frontendRoot, "index.html")));
+app.get("/", (req, res) => res.locals.adSenseNonce
+  ? res.type("html").send(withScriptNonce(readFileSync(path.join(frontendRoot, "index.html"), "utf8"), res.locals.adSenseNonce))
+  : res.sendFile(path.join(frontendRoot, "index.html")));
 app.get("/blackjack-game.js", (req, res) => res.sendFile(path.join(frontendRoot, "blackjack-game.js")));
 app.get("/auth.js", (req, res) => res.sendFile(path.join(frontendRoot, "auth.js")));
 app.get("/site-nav.js", (req, res) => res.sendFile(path.join(frontendRoot, "site-nav.js")));
