@@ -78,3 +78,9 @@
     .account-bar .account-actions { justify-content: center; flex-wrap: wrap; min-width: 0; margin: 0; gap: 2px; }
     .account-bar .account-name { max-width: 100%; }
 }
+
+.topic-view { margin: 20px 0; }
+.topic-view ul { display: flex; flex-wrap: wrap; gap: 12px 24px; padding-left: 20px; }
+.ad-placement { margin: 160px auto 40px; width: 100%; min-height: 320px; text-align: center; }
+.ad-placement p { font-size: .75rem; color: #b8cec0; }
+.ad-placement ins { display: block; min-height: 280px; }
