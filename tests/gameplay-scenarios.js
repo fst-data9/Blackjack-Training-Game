@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
 
+// These fixtures also run through real DOM events in the browser suite.
+export const splitAceScenarios = [
+    { name: "first ace draws a king", cards: ["A", "9", "A", "7", "K", "7", "2"], bankroll: 1020, outcomes: ["win", "push"], nets: [2000, 0], dealerTotal: 18 },
+    { name: "second ace draws a queen", cards: ["A", "9", "A", "8", "5", "Q"], bankroll: 1000, outcomes: ["lose", "win"], nets: [-2000, 2000], dealerTotal: 17 },
+    { name: "both aces draw tens", cards: ["A", "9", "A", "8", "10", "J"], bankroll: 1040, outcomes: ["win", "win"], nets: [2000, 2000], dealerTotal: 17 },
+    { name: "aces cannot be re-split", cards: ["A", "9", "A", "8", "A", "7"], bankroll: 1000, outcomes: ["lose", "win"], nets: [-2000, 2000], dealerTotal: 17 },
+    { name: "split aces push against dealer 21", cards: ["A", "9", "A", "7", "K", "Q", "5"], bankroll: 1000, outcomes: ["push", "push"], nets: [0, 0], dealerTotal: 21 },
+    { name: "dealer bust settles both split aces", cards: ["A", "6", "A", "9", "2", "3", "K"], bankroll: 1040, outcomes: ["win", "win"], nets: [2000, 2000], dealerTotal: 25 },
+];
+
 // Expected results are supplied independently of the game's settlement helpers.
 export function runGameplayScenarios(createHarness) {
     const coverage = {};
@@ -109,6 +119,70 @@ export function runGameplayScenarios(createHarness) {
             game.click("standBtn");
             assert.equal(game.context.__BJ_TEST__.stats().insuranceTaken, 0);
         }
+    });
+
+    for (const fixture of splitAceScenarios) {
+        scenario(`split aces: ${fixture.name}`, () => {
+            const game = deal(fixture.cards);
+            let dealerCalls = 0;
+            // Splitting and settlement are synchronous. Inspect the actual
+            // boundary before dealer play to prove there was no early payout.
+            game.context.beforeAceDealerPlay = () => {
+                dealerCalls++;
+                assert.equal(game.state().inRound, true);
+                assert.equal(game.state().handCount, 2);
+                assert.equal(game.state().bankroll, 960);
+                assert.equal(game.recordedHands.length, 0);
+                assert.equal(game.context.__BJ_TEST__.stats().hands, 0);
+                assert.deepEqual(Array.from(game.inspect("playerHands"), hand => Array.from(hand, card => card.rank)),
+                    [["A", fixture.cards[4]], ["A", fixture.cards[5]]]);
+                assert.equal(game.inspect("playerHands.every(hand => hand._done)"), true);
+                assert.equal(game.inspect("playerHands.some(hand => isBlackjack(hand))"), false);
+                assert.equal(game.buttons().deal, false);
+                for (const key of ["hit", "stand", "double", "split", "surrender"]) {
+                    assert.equal(game.buttons()[key], false, `${key} enabled before ace settlement`);
+                }
+                assert.ok(game.elements.get("dealerCards").querySelectorAll("img")[1].src.endsWith("/RED_BACK.svg"));
+                for (let index = 0; index < 2; index++) {
+                    game.inspect(`activeHandIndex = ${index}; playerHand = playerHands[activeHandIndex]`);
+                    assert.equal(game.inspect("recommendedAction()"), null);
+                    // Verify the handlers also reject programmatic actions.
+                    game.inspect("hit(); stand(); double(); split(); surrender();");
+                }
+                assert.equal(game.state().bankroll, 960);
+                assert.equal(game.inspect("playerHands.every(hand => hand.length === 2)"), true);
+            };
+            game.inspect("const originalAceDealerPlay = dealerPlay; dealerPlay = () => { beforeAceDealerPlay(); originalAceDealerPlay(); }");
+            assert.equal(game.inspect("recommendedAction()"), "split");
+            game.click("splitBtn");
+            assert.equal(dealerCalls, 1);
+            assert.equal(game.state().dealerTotal, fixture.dealerTotal);
+            finish(game, fixture.bankroll, fixture.outcomes, fixture.nets, [2000, 2000]);
+            assert.ok(game.recordedHands.every(hand => hand.didSplit && !hand.didDouble));
+            const stats = game.context.__BJ_TEST__.stats();
+            assert.equal(stats.rounds, 1);
+            assert.equal(stats.decisions, 1);
+            assert.equal(stats.correctDecisions, 1);
+            assert.equal(stats.outcomes.blackjack, 0);
+            assert.deepEqual(Array.from(game.inspect("strategyDecisions"), decision => decision.action), ["split"]);
+            assert.equal(game.inspect("reviewHands.length"), 0);
+        });
+    }
+    scenario("split-ace 21 is a normal win in mistake review", () => {
+        const game = deal(["A", "A", "A", "6", "K", "7"]);
+        game.click("insuranceBtn"); // An incorrect insurance choice adds this round to review.
+        game.click("splitBtn");
+        finish(game, 1030, ["win", "win"], [2000, 2000], [2000, 2000]);
+        assert.equal(game.inspect("reviewHands[0].outcome"), "win");
+        assert.deepEqual(Array.from(game.inspect("reviewHands[0].decisions"), decision => decision.action), ["insurance", "split"]);
+    });
+    scenario("insufficient bankroll prevents splitting aces", () => {
+        const game = deal(["A", "9", "A", "8"], 20, 30);
+        assert.equal(game.buttons().split, false);
+        game.click("splitBtn");
+        assert.equal(game.state().handCount, 1);
+        assert.equal(game.state().bankroll, 10);
+        game.click("standBtn");
     });
 
     scenario("split mixed outcomes and per-hand double flags", () => {
