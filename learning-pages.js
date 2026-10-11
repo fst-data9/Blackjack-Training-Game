@@ -1,3 +1,22 @@
+function appendLearningText(element, text, state) {
+    for (const part of blackjackLearningContent.linkify(text, state)) {
+        if (part.href) {
+            const link = document.createElement('a');
+            link.className = 'in-text-link';
+            link.href = part.href;
+            link.textContent = part.text;
+            element.append(link);
+        } else {
+            element.append(document.createTextNode(part.text));
+        }
+    }
+}
+
+function learningPageLinkState(section) {
+    const path = location.pathname.slice(1);
+    return blackjackLearningContent.createPageLinkState(path.split('/')[0] === section ? path : section);
+}
+
 (() => {
     'use strict';
     const make = (tag, text, className) => {
@@ -23,17 +42,32 @@
         learn.classList.add('learning-content');
         learn.append(make('p', 'SMALL LESSONS. SMARTER MOVES.', 'learning-eyebrow'), make('h2', 'Learn the table'), make('p', 'Build your instincts one hand at a time. Open a lesson, then test your next move.', 'learning-lead'));
         const lessonGrid = make('div', '', 'lesson-grid');
-        lessons.forEach(([number, title, body, tip]) => {
+        lessons.forEach(({ number, slug, title }) => {
             const details = make('details', '', 'lesson-card');
             const summary = make('summary');
             summary.append(make('span', number, 'lesson-number'), make('span', title));
-            details.dataset.topic = title.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/-$/, '');
+            details.dataset.topic = slug;
             const link = make('a', 'Read this lesson →', 'topic-link');
             link.href = `/learn/${details.dataset.topic}`;
-            details.append(summary, make('p', body), make('p', tip, 'lesson-tip'), link);
+            details.append(summary, make('p', '', 'lesson-body'), make('p', '', 'lesson-tip'), link);
             lessonGrid.append(details);
         });
         learn.append(lessonGrid);
+        const updateLessonLinks = () => {
+            const pageState = learningPageLinkState('learn');
+            lessonGrid.querySelectorAll('.lesson-card').forEach((card, index) => {
+                const state = blackjackLearningContent.createLinkState(pageState.currentTopic, Math.min(5, pageState.remaining), pageState.seen);
+                const limit = state.remaining;
+                for (const [selector, text] of [['.lesson-body', lessons[index].body], ['.lesson-tip', lessons[index].tip]]) {
+                    const paragraph = card.querySelector(selector);
+                    paragraph.replaceChildren();
+                    appendLearningText(paragraph, text, state);
+                }
+                pageState.remaining -= limit - state.remaining;
+            });
+        };
+        updateLessonLinks();
+        window.addEventListener('publicpagechange', updateLessonLinks);
         const quiz = make('section', '', 'learning-quiz');
         quiz.setAttribute('aria-label', 'Basic strategy quiz');
         quiz.append(make('p', 'YOUR MOVE', 'learning-eyebrow'), make('h2', 'The decision dojo'), make('p', 'Original two-card hands. Enough chips to double or split. Dealer stands on soft 17.', 'quiz-rules'));
@@ -112,15 +146,21 @@
         let category = 'All';
         const update = () => {
             const query = search.value.trim().toLowerCase();
-            const matches = terms.filter(([term, group, description]) => (category === 'All' || group === category) && `${term} ${description}`.toLowerCase().includes(query));
+            const matches = terms.filter(({ title, category: group, body }) => (category === 'All' || group === category) && `${title} ${body}`.toLowerCase().includes(query));
             count.textContent = `${matches.length} ${matches.length === 1 ? 'term' : 'terms'} found`;
             results.replaceChildren();
-            matches.forEach(([term, group, description]) => {
+            const pageState = learningPageLinkState('glossary');
+            matches.forEach(({ slug, title, category: group, body }) => {
                 const card = make('article', '', 'glossary-card');
-                card.dataset.topic = term.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                const link = make('a', `${term} →`, 'topic-link');
+                card.dataset.topic = slug;
+                const link = make('a', `${title} →`, 'topic-link');
                 link.href = `/glossary/${card.dataset.topic}`;
-                card.append(make('span', group, 'learning-eyebrow'), make('h2', term), make('p', description));
+                const description = make('p', '', 'glossary-description');
+                const state = blackjackLearningContent.createLinkState(pageState.currentTopic, Math.min(2, pageState.remaining), pageState.seen);
+                const limit = state.remaining;
+                appendLearningText(description, body, state);
+                pageState.remaining -= limit - state.remaining;
+                card.append(make('span', group, 'learning-eyebrow'), make('h2', title), description);
                 card.append(link);
                 results.append(card);
             });
@@ -138,6 +178,7 @@
             filters.append(button);
         });
         search.addEventListener('input', update);
+        window.addEventListener('publicpagechange', update);
         glossary.append(label, search, filters, count, results);
         update();
     }
