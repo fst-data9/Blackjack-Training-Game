@@ -64,6 +64,28 @@ This checklist tracks the work required to move the Blackjack Training Game from
 
 ## Monitoring and operations
 
+SEO/analytics investigation on 2026-10-11: public production sitemap and robots
+returned 200 with valid XML/content types; all four sitemap pages returned 200
+and matching production canonicals. HTTP and www redirected to the HTTPS apex
+(308 and 301). User screenshots confirm the correct domain property
+and submitted URL and an indexed homepage. The sitemap detail reports last read
+2026-10-10 and “Sitemap could not be read”, without a specific fetch reason;
+the user subsequently reported a successful live sitemap test. User-provided
+Caddy logs show sitemap HTTP 200 responses to Google Inspection Tool at
+2026-10-11 00:03:30–31 and 00:05:18 UTC, and to full Googlebot user agents at
+00:04:33 and 00:04:54 UTC. Crawler source IPs were omitted and have not been
+verified. Earlier short `Googlebot` user-agent entries were diagnostic probes.
+The supplied logs do not establish the original failure cause or successful
+sitemap processing in Search Console; no current HTTP fetch failure appears.
+Analytics CSP blocked the existing manual beacon; a local fix and browser regression are
+prepared; backend checks, security tests and all 62 browser tests passed, with
+the final analytics test also passing on desktop/mobile after API mocking.
+Review/deployment and dashboard verification remain pending. Staging public
+responses lacked the configured Caddy `X-Robots-Tag`; the staging deployment
+script now recreates Caddy to refresh its file mount, matching production.
+Verify the public header after deployment. See
+[Search Console diagnostics](docs/search-console.md).
+
 - [x] Add structured application and request logging without recording passwords, tokens, or other secrets.
 - [ ] Send production logs to persistent centralized storage.
 - [ ] Add uptime monitoring for the website and `/api/health`.
