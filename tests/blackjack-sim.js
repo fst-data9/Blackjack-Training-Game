@@ -289,7 +289,12 @@ function assertActionAvailability(game) {
     const buttons = game.buttons();
     const hand = game.inspect("currentHand()");
     const finished = Boolean(hand._done);
-    const playable = state.inRound && !state.awaitingInsurance && !finished;
+    const splitAce = Boolean(hand._fromSplit && hand[0]?.rank === "A");
+    const playable = state.inRound && !state.awaitingInsurance && !finished && !splitAce;
+    if (splitAce) {
+        assert.equal(hand.length, 2, "Split aces must receive exactly one card");
+        assert.equal(finished, true, "Split aces must finish without player actions");
+    }
     const bet = game.inspect("playerHands ? bets[activeHandIndex] : currentBet");
     const value = card => card.rank === "A" ? 11 : ["J", "Q", "K"].includes(card.rank) ? 10 : Number(card.rank);
     const expected = {
@@ -321,68 +326,7 @@ function chooseAction(buttons) {
     return weighted[Math.floor(actionRandom() * weighted.length)];
 }
 
-// Random play can miss rare card sequences and cannot establish the intended
-// transition rules. Run fixed regression scenarios on every simulation run.
-function splitAceFixture(firstCard, secondCard, extraCards = []) {
-    const game = createHarness();
-    game.elements.get("betInput").value = "20";
-    game.dealCards([["A"], ["9"], ["A", "♥"], ["8"], [firstCard], [secondCard], ...extraCards.map(rank => [rank])]);
-    assert.equal(game.buttons().split, true);
-    game.click("splitBtn");
-    return game;
-}
-
-function assertPlayingHand(game, index) {
-    assert.equal(game.state().inRound, true, "A split round must remain active while another hand needs play");
-    assert.equal(game.state().activeHandIndex, index);
-    assert.equal(game.buttons().deal, false);
-    assert.equal(game.buttons().hit, true);
-    assert.equal(game.buttons().stand, true);
-    assert.equal(game.recordedHands.length, 0, "Do not settle before the remaining hands finish");
-    assert.ok(game.elements.get("dealerCards").querySelectorAll("img")[1].src.endsWith("/RED_BACK.svg"));
-}
-
-function assertAceSettlement(game, bankroll, outcomes) {
-    assert.equal(game.state().inRound, false);
-    game.assertSettlement();
-    assert.equal(game.state().bankroll, bankroll);
-    assert.deepEqual(game.recordedHands.map(hand => hand.outcome), outcomes);
-    assert.ok(game.recordedHands.every(hand => hand.didSplit && hand.outcome !== "blackjack"),
-        "Split 21 pays as a regular hand, never a natural blackjack");
-    const stats = game.context.window.__BJ_TEST__.stats();
-    assert.equal(stats.hands, 2);
-    assert.equal(stats.actualNet, bankroll - 1000);
-}
-
-const firstAce21 = splitAceFixture("K", "5", ["5"]);
-assertPlayingHand(firstAce21, 1);
-firstAce21.click("hitBtn");
-assertAceSettlement(firstAce21, 1040, ["win", "win"]);
-
-const secondAce21 = splitAceFixture("5", "Q");
-assertPlayingHand(secondAce21, 0);
-secondAce21.click("standBtn");
-assertAceSettlement(secondAce21, 1000, ["lose", "win"]);
-
-const bothAces21 = splitAceFixture("10", "J");
-assertAceSettlement(bothAces21, 1040, ["win", "win"]);
-
-const hitAce21 = splitAceFixture("5", "6", ["5"]);
-assertPlayingHand(hitAce21, 0);
-hitAce21.click("hitBtn");
-assertPlayingHand(hitAce21, 1);
-hitAce21.click("standBtn");
-assertAceSettlement(hitAce21, 1020, ["win", "push"]);
-
-const bustAce = splitAceFixture("9", "6", ["5", "K"]);
-assertPlayingHand(bustAce, 0);
-bustAce.click("hitBtn"); // Soft 20 becomes hard 15.
-assertPlayingHand(bustAce, 0);
-bustAce.click("hitBtn");
-assertPlayingHand(bustAce, 1);
-bustAce.click("standBtn");
-assertAceSettlement(bustAce, 980, ["lose", "push"]);
-
+// Fixed scenarios establish rare transitions before the random simulation.
 const scenarioCoverage = runGameplayScenarios(createHarness);
 
 const game = createHarness();
@@ -497,7 +441,7 @@ console.log(
     JSON.stringify(
         {
             ok: true,
-            deterministicScenarios: 5 + Object.values(scenarioCoverage).filter(value => value === true).length,
+            deterministicScenarios: Object.values(scenarioCoverage).filter(value => value === true).length,
             scenarioCoverage,
             seed,
             roundsRequested: roundCount,
