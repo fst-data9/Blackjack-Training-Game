@@ -783,6 +783,7 @@ app.get("/learning-content.cjs", (req, res) => res.type("application/javascript"
 app.get("/adsense.js", (req, res) => res.sendFile(path.join(frontendRoot, "adsense.js")));
 app.get("/consent.js", (req, res) => res.sendFile(path.join(frontendRoot, "consent.js")));
 app.get("/adsense-config", (req, res) => res.json(adSenseConfig));
+app.get("/ads.txt", (req, res) => res.type("text/plain").sendFile(path.join(frontendRoot, "ads.txt")));
 app.get("/learning-pages.js", (req, res) => res.sendFile(path.join(frontendRoot, "learning-pages.js")));
 app.get("/learning-pages.css", (req, res) => res.sendFile(path.join(frontendRoot, "learning-pages.css")));
 app.get("/strategy-charts.js", (req, res) => res.sendFile(path.join(frontendRoot, "strategy-charts.js")));

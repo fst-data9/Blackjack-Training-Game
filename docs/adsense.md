@@ -61,8 +61,8 @@ on the backend gate and are not active in this PR. Object, inline-handler and
 frame-ancestor restrictions remain in both states.
 
 Before activation, verify the published Google CMP (including decline and
-revocation), obtain site/account approval and slot identifiers, and configure
-`/ads.txt` from the account-provided seller record. Publish an accurate privacy
+revocation), obtain site/account approval and slot identifiers, and confirm
+the `/ads.txt` seller record matches the AdSense account. Publish an accurate privacy
 policy describing cookies, Google/third-party advertising data use, account data,
 contact details and retention choices. Google's
 [consent requirements](https://support.google.com/adsense/answer/13554116?hl=en)
@@ -70,6 +70,24 @@ and [CMP setup](https://support.google.com/adsense/answer/7670013?hl=en) cover
 EEA/UK/Switzerland traffic. A generic local cookie banner is not a substitute.
 The CMP adapter emits `adsenseconsent` with boolean detail when TC data is ready.
 The event alone cannot activate ads in this version.
+
+## ads.txt seller record
+
+The root-level `ads.txt` file is included in the server image and served at
+`/ads.txt` as plain text with no sign-in required. It uses Aaron's public
+publisher ID, matching the existing AdSense account meta tag:
+
+```text
+google.com, pub-8578826503018521, DIRECT, f08c47fec0942fa0
+```
+
+This follows [Google's ads.txt guide](https://support.google.com/adsense/answer/12171612?hl=en).
+The publisher uses `pub-` here rather than the meta tag's `ca-pub-` prefix.
+Publishing this file does not enable the site's ad loader or CMP. After this
+change reaches the live site, verify `https://blackjack-trainer.co/ads.txt`
+against the account's snippet and use **AdSense → Sites → Check for updates**.
+Google's status changes after it fetches the file; a PR alone does not update
+the live site's “Not found” status.
 
 ## Google consent integration
 
