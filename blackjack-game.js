@@ -649,7 +649,7 @@ function makeHandPanel(index, hand, bet, isActive) {
     cards.className = "cards hand";
 
     const total = document.createElement("div");
-    const suffix = hand._fromSplit && hand[0]?.rank === "A" ? " (split ace)" : "";
+    const suffix = hand._splitAce ? " (split ace, one card)" : "";
     total.textContent = `Total: ${handValue(hand)}${suffix}`;
 
     header.append(title, wager);
@@ -671,7 +671,7 @@ function updateHandPanel(panel, index, hand, bet, isActive) {
     panel.classList.toggle("inactive", playerHands && !isActive);
     panel._titleEl.textContent = `Hand ${index + 1}`;
     panel._wagerEl.textContent = bet > 0 ? `Bet: $${bet}` : "";
-    const suffix = hand._fromSplit && hand[0]?.rank === "A" ? " (split ace)" : "";
+    const suffix = hand._splitAce ? " (split ace, one card)" : "";
     panel._totalEl.textContent = `Total: ${handValue(hand)}${suffix}`;
     renderHand(panel._cardsEl, hand);
 }
@@ -728,7 +728,7 @@ function render({ hideDealerHoleCard = false } = {}) {
     const handBet = playerHands ? bets[activeHandIndex] : currentBet;
 
     const handFinished =
-        (hand && hand._done) ||
+        (hand && (hand._done || hand._splitAce)) ||
         (playerHands && handOutcomes && handOutcomes[activeHandIndex] === "surrender");
 
     const actionBlocked = !inRound || awaitingInsurance || handFinished;
@@ -833,7 +833,7 @@ function recommendedAction() {
     if (awaitingInsurance) return "noInsurance";
 
     const hand = currentHand();
-    if (!hand || hand._done) return null;
+    if (!hand || hand._done || hand._splitAce) return null;
 
     const handBet = playerHands ? bets[activeHandIndex] : currentBet;
     const upcard = dealerUpValue();
@@ -1299,7 +1299,7 @@ function hit() {
     const hand = currentHand();
 
     // If this hand is already finished, ignore input
-    if (hand && hand._done) return;
+    if (hand && (hand._done || hand._splitAce)) return;
     evaluateDecision("hit");
 
     drawCard(hand);
@@ -1346,6 +1346,7 @@ function stand({ auto = false } = {}) {
     if (awaitingInsurance) return;
 
     const hand = currentHand();
+    if (hand._done || hand._splitAce) return;
     if (!auto) evaluateDecision("stand");
 
     // If split, standing ends ONLY the current hand
@@ -1380,6 +1381,7 @@ function double() {
     if (awaitingInsurance) return;
 
     const hand = currentHand();
+    if (hand._done || hand._splitAce) return;
 
     if (hand.length !== 2) {
         setStatus("Double is only allowed before hitting.");
@@ -1440,6 +1442,7 @@ function split() {
     if (awaitingInsurance) return;
 
     const hand = currentHand();
+    if (hand._done || hand._splitAce) return;
     const i = activeHandIndex;
     const handBet = playerHands ? bets[i] : currentBet;
 
@@ -1477,6 +1480,11 @@ function split() {
     const secondHand = [secondCard];
     hand._fromSplit = true;
     secondHand._fromSplit = true;
+    const splittingAces = hand[0].rank === "A" && secondCard.rank === "A";
+    if (splittingAces) {
+        hand._splitAce = true;
+        secondHand._splitAce = true;
+    }
 
     if (!playerHands) {
         playerHands = [hand];
@@ -1492,11 +1500,19 @@ function split() {
     // Deal one card to each hand (common rule)
     drawCard(hand);
     drawCard(secondHand);
+    if (splittingAces) {
+        hand._done = true;
+        secondHand._done = true;
+    }
 
     // Keep compatibility with your hit/stand which uses playerHand
     playerHand = playerHands[activeHandIndex];
 
     render({ hideDealerHoleCard: true });
+    if (splittingAces) {
+        advanceHandOrResolve();
+        return;
+    }
     if (handValue(playerHand) === 21) {
         stand({ auto: true });
     } else {
@@ -1621,6 +1637,7 @@ function surrender() {
     if (awaitingInsurance) return;
 
     const hand = currentHand();
+    if (hand._done || hand._splitAce) return;
 
     if (hand.length !== 2) {
         setStatus("Surrender is only allowed on your first two cards.");

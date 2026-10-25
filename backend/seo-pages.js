@@ -66,7 +66,8 @@ export function renderSeoPage(template, page) {
     .replaceAll(`${origin}/"`, `${origin}/${page}"`)
     .replace('<main id="gamePage">', '<main id="gamePage" hidden>')
     .replace('<main id="placeholderPages" hidden>', '<main id="placeholderPages">')
-    .replace(`data-placeholder-content="${section}" hidden`, `data-placeholder-content="${section}"`)
+    .replace(new RegExp(`<[^>]*\\bdata-placeholder-content="${section}"[^>]*>`), tag =>
+      tag.replace(/\s+hidden(?=\s|>)/, ""))
     .replace(' data-placeholder-page="practice" aria-current="page"', ' data-placeholder-page="practice"')
     .replace(`data-placeholder-page="${section}"`, `data-placeholder-page="${section}" aria-current="page"`);
   const breadcrumbs = renderBreadcrumbs(page);

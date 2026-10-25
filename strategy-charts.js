@@ -82,7 +82,7 @@
         button.addEventListener('click', () => exporter.handle(button, document.getElementById('chartExportStatus'), () => {
             const title = `Blackjack basic strategy · ${type.options[type.selectedIndex].text}`;
             const settings = `Double / split affordable: ${afford.checked ? 'yes' : 'no'} · Surrender: ${surrender.checked ? 'yes' : 'no'}`;
-            const rules = 'Trainer S17 · playable split aces · four hands · fixed recommendations, not deck-specific';
+            const rules = 'Trainer S17 · one card per split ace · four hands · fixed recommendations, not deck-specific';
             if (format === 'csv') {
                 const rows = [['Chart', title], ['Settings', settings], ['Rules', rules], ['Your hand', ...upcards.map(value => value === 11 ? 'A' : value)], ...chartRows];
                 exporter.download(new Blob([exporter.csv(rows)], { type: 'text/csv;charset=utf-8' }), `blackjack-strategy-${type.value}.csv`);

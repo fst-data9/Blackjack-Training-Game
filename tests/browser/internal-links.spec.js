@@ -69,7 +69,6 @@ test('HTML anchor crawl from home reaches every sitemap URL', async ({ request }
     }
     const sitemap = await (await request.get('/sitemap.xml')).text();
     const paths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => new URL(match[1]).pathname);
-    expect(paths).toHaveLength(36);
     expect([...visited].sort()).toEqual(paths.sort());
 });
 

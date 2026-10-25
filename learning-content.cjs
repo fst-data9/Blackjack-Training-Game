@@ -44,7 +44,7 @@ const blackjackLearningContent = (() => {
                 "slug": "soft-hands-and-pairs",
                 "title": "Soft hands & pairs",
                 "body": "A soft hand contains an ace still worth 11. That cushion creates good doubling opportunities. Pairs have their own strategy: splitting aces and eights is a useful starting point; keeping tens together protects a strong 20.",
-                "tip": "This trainer allows up to four split hands. Split aces remain playable with Hit and Stand, and a split hand reaching 21 advances automatically. Split 21 is not a natural blackjack and pays 1:1 on a win.",
+                "tip": "This trainer allows up to four split hands. Split aces receive one card each and cannot be hit, doubled or re-split. A split hand reaching 21 advances automatically. Split 21 is not a natural blackjack and pays 1:1 on a win.",
                 "related": ["glossary/soft-hand", "glossary/split", "charts/soft", "charts/pair"]
             },
             {
@@ -189,7 +189,7 @@ const blackjackLearningContent = (() => {
                 "slug": "resplit",
                 "title": "Resplit",
                 "category": "Actions",
-                "body": "Split a newly dealt matching pair again. This trainer permits a maximum of four hands, including when splitting aces.",
+                "body": "Split a newly dealt matching pair again. This trainer permits a maximum of four hands, but split aces receive one card each and cannot be re-split.",
                 "related": ["glossary/split", "glossary/das", "charts/pair", "learn/soft-hands-and-pairs"],
                 "linkTerms": ["resplit", "re-split", "re-splitting"]
             },
@@ -221,7 +221,7 @@ const blackjackLearningContent = (() => {
                 "slug": "split",
                 "title": "Split",
                 "category": "Actions",
-                "body": "Separate a matching pair into two hands with equal bets. This trainer allows up to four hands, including continued play after splitting aces. Split hands reaching 21 advance automatically; split 21 is not a natural blackjack and pays 1:1 on a win.",
+                "body": "Separate a matching pair into two hands with equal bets. This trainer allows up to four hands. Split aces receive one card each and cannot be hit, doubled or re-split. Split hands reaching 21 advance automatically; split 21 is not a natural blackjack and pays 1:1 on a win.",
                 "related": ["glossary/resplit", "glossary/das", "charts/pair", "learn/soft-hands-and-pairs"],
                 "linkTerms": ["split", "splitting"]
             },
@@ -260,7 +260,7 @@ const blackjackLearningContent = (() => {
             {
                 "slug": "pair",
                 "title": "Pairs",
-                "body": "Consider pair strategy before hard totals. Split aces and eights when affordable; keep tens together. Play fives as hard 10. This trainer permits up to four hands, including continued play after splitting aces. Split hands reaching 21 advance automatically; split 21 is not a natural blackjack and pays 1:1 on a win.",
+                "body": "Consider pair strategy before hard totals. Split aces and eights when affordable; keep tens together. Play fives as hard 10. This trainer permits up to four hands. Split aces receive one card each and cannot be hit, doubled or re-split. Split hands reaching 21 advance automatically; split 21 is not a natural blackjack and pays 1:1 on a win.",
                 "tip": "Dealer stands on soft 17. Doubling after splitting non-ace pairs and late surrender on the original hand are available. These are fixed trainer recommendations; deck count and casino rules can change optimal strategy. Basic strategy does not guarantee profit.",
                 "related": ["glossary/split", "glossary/resplit", "glossary/das", "learn/soft-hands-and-pairs"]
             }

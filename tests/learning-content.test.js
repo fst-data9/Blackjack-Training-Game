@@ -134,3 +134,14 @@ test('every rendered topic has unique in-text targets, no self-link and a five-l
         }
     }
 });
+
+test('privacy SEO page exposes its content without client-side navigation', () => {
+    const html = renderSeoPage(template, 'privacy');
+    const main = html.match(/<main id="placeholderPages"[^>]*>/)?.[0];
+    const privacy = html.match(/<section[^>]*data-placeholder-content="privacy"[^>]*>/)?.[0];
+    assert.ok(main);
+    assert.ok(privacy);
+    assert.doesNotMatch(main, /\shidden\b/);
+    assert.doesNotMatch(privacy, /\shidden\b/);
+    assert.match(html, /<h1 id="privacyHeading"/);
+});

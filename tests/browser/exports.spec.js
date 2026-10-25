@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
         if (route.request().url().endsWith('/simulations')) {
             page.runs++;
             const config = route.request().postDataJSON();
-            return route.fulfill({ status: 201, json: { id: 'export-test', seed: 42, engineVersion: 2, config, result: simulate(config, 42) } });
+            return route.fulfill({ status: 201, json: { id: 'export-test', seed: 42, engineVersion: 3, config, result: simulate(config, 42) } });
         }
         return route.fulfill({ json: {} });
     });

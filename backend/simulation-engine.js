@@ -2,7 +2,7 @@ import catalog from '../strategy-catalog.cjs';
 import { createBettingPlan } from './betting-strategies.js';
 // Versioned, deterministic server simulation. Money is integer cents; payouts
 // round down to whole dollars to match the browser trainer's settlement rules.
-export const ENGINE_VERSION = 2;
+export const ENGINE_VERSION = 3;
 export const ACTIONS = ['hit', 'stand', 'double', 'split', 'surrender'];
 export function validateConfig(input) {
   const fail = () => { throw new Error('Invalid simulation settings'); };
@@ -95,10 +95,10 @@ export function playRound(config, balance, bet, draw) {
     balance += bet * 2 + half(bet); outcomes.blackjack++;
     return { balance, wagered, outcomes };
   }
-  const hands = [{ cards: player, bet, surrendered: false }];
+  const hands = [{ cards: player, bet, surrendered: false, splitAces: false }];
   for (let i = 0; i < hands.length; i++) {
     const hand = hands[i];
-    while (score(hand.cards).total < 21) {
+    while (!hand.splitAces && score(hand.cards).total < 21) {
       const two = hand.cards.length === 2;
       const available = {
         double: two && balance >= hand.bet,
@@ -114,7 +114,9 @@ export function playRound(config, balance, bet, draw) {
       }
       if (action === 'split') {
         balance -= hand.bet; wagered += hand.bet;
-        const other = { cards: [hand.cards.pop()], bet: hand.bet, surrendered: false };
+        const splittingAces = hand.cards[0] === 11;
+        const other = { cards: [hand.cards.pop()], bet: hand.bet, surrendered: false, splitAces: splittingAces };
+        hand.splitAces = splittingAces;
         hand.cards.push(draw()); other.cards.push(draw());
         hands.splice(i + 1, 0, other);
       } else hand.cards.push(draw());
