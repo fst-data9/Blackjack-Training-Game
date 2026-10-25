@@ -230,7 +230,7 @@ test("learning pages preserve the round and serve interactive quiz, glossary and
     await page.locator('[data-placeholder-page="glossary"]').click();
     await page.locator("#glossarySearch").fill("Split aces receive");
     await expect(page.locator(".glossary-card")).toHaveCount(1);
-    await expect(page.locator(".glossary-card")).toContainText("no hitting, doubling or re-splitting");
+    await expect(page.locator(".glossary-card")).toContainText("cannot be hit, doubled or re-split");
     await page.locator('[data-placeholder-page="charts"]').click();
     await page.locator("#chartType").selectOption("soft");
     await page.locator("#chartDouble").uncheck();
