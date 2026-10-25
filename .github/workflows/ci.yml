@@ -47,6 +47,9 @@ jobs:
       - name: Run blackjack simulation
         run: npm run test:sim
 
+      - name: Test server simulations
+        run: npm run test:simulation --prefix backend
+
   browser:
     name: Desktop and mobile browser behaviour
     runs-on: ubuntu-24.04

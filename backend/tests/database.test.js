@@ -135,7 +135,7 @@ test("PostgreSQL migration and API-role integration", { skip: !adminUrl }, async
     const { url, client } = await fixture("rollback");
     await migrate(url);
     const directory = await migrationCopy();
-    const filename = "005_transaction_test.sql";
+    const filename = "006_transaction_test.sql";
     await fs.writeFile(path.join(directory, filename), "CREATE TABLE rollback_probe (id integer); SELECT definitely_missing_column;\n");
     await assert.rejects(migrate(url, directory), (error) => error.stderr.includes("Migration failed"));
     assert.equal((await client.query("SELECT to_regclass('public.rollback_probe') AS name")).rows[0].name, null);
@@ -149,7 +149,7 @@ test("PostgreSQL migration and API-role integration", { skip: !adminUrl }, async
     const { url, client } = await fixture("immutable");
     await migrate(url);
     const directory = await migrationCopy();
-    await fs.writeFile(path.join(directory, "005_must_not_run.sql"), "CREATE TABLE must_not_run (id integer);\n");
+    await fs.writeFile(path.join(directory, "006_must_not_run.sql"), "CREATE TABLE must_not_run (id integer);\n");
     const original = await fs.readFile(path.join(directory, migrations[0]), "utf8");
     await fs.appendFile(path.join(directory, migrations[0]), "\n-- modified\n");
     await assert.rejects(migrate(url, directory), (error) => error.stderr.includes("was changed after it was applied"));
@@ -200,6 +200,13 @@ test("PostgreSQL migration and API-role integration", { skip: !adminUrl }, async
         payout_cents, player_cards, dealer_cards)
       VALUES ('api-role-session', 1, 0, 100, 'win', 100, '[]', '[]') RETURNING id
     `);
+    const simulationId = crypto.randomUUID();
+    await runtime.query(`INSERT INTO simulation_runs (id, engine_version, seed, settings, results)
+      VALUES ($1, 1, 4294967295, '{"rounds":1000}', '{"profit":100}')`, [simulationId]);
+    const savedSimulation = await runtime.query('SELECT user_id, results FROM simulation_runs WHERE id = $1', [simulationId]);
+    assert.equal(savedSimulation.rows[0].user_id, null);
+    assert.equal(savedSimulation.rows[0].results.profit, 100);
+    await runtime.query('DELETE FROM simulation_runs WHERE id = $1', [simulationId]);
     assert.ok(hand.id);
     assert.equal((await runtime.query("SELECT count(*)::int AS count FROM hands")).rows[0].count, 1);
     await runtime.query("UPDATE sessions SET user_agent = 'role-test' WHERE id = 'api-role-session'");
