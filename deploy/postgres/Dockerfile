@@ -1,8 +1,7 @@
 FROM docker.io/library/postgres:16.15-alpine3.24
 
-# Alpine's su-exec is a small C utility equivalent for the entrypoint's
-# privilege-drop use of gosu. Replacing the bundled Go binary removes its
-# vulnerable Go standard library from the runtime image.
+# Alpine's su-exec safely drops privileges for the official entrypoint without
+# shipping the vulnerable Go-based gosu binary.
 RUN apk add --no-cache su-exec \
-    && rm /usr/local/bin/gosu \
-    && ln -s /sbin/su-exec /usr/local/bin/gosu
+    && sed -i 's/exec gosu postgres/exec su-exec postgres/' /usr/local/bin/docker-entrypoint.sh \
+    && rm /usr/local/bin/gosu
