@@ -86,7 +86,7 @@ used as research references. No external scripts or accounts are needed.
 
    ```sh
    podman-compose up -d postgres
-   podman-compose build api migrate
+   podman-compose build postgres api migrate
    bash scripts/migrate.sh
    podman-compose up -d api
    ```

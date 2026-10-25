@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: docker.io/library/postgres:16.15-alpine3.24
+    image: blackjack-postgres:16
+    build:
+      context: .
+      dockerfile: deploy/postgres/Dockerfile
     container_name: blackjack-postgres
     restart: unless-stopped
     environment:

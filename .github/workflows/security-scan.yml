@@ -48,11 +48,17 @@ jobs:
               docker build --pull -f backend/Dockerfile -t blackjack-security-scan:api .
               echo "SCAN_IMAGE=blackjack-security-scan:api" >> "$GITHUB_ENV"
               ;;
-            postgres) echo "SCAN_IMAGE=postgres:16.15-alpine3.24" >> "$GITHUB_ENV" ;;
-            caddy) echo "SCAN_IMAGE=caddy:2.11.7-alpine" >> "$GITHUB_ENV" ;;
+            postgres)
+              docker build --pull -f deploy/postgres/Dockerfile -t blackjack-security-scan:postgres .
+              echo "SCAN_IMAGE=blackjack-security-scan:postgres" >> "$GITHUB_ENV"
+              ;;
+            caddy)
+              docker build --pull -f deploy/caddy/Dockerfile -t blackjack-security-scan:caddy .
+              echo "SCAN_IMAGE=blackjack-security-scan:caddy" >> "$GITHUB_ENV"
+              ;;
           esac
       - name: Scan image for high and critical vulnerabilities
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ env.SCAN_IMAGE }}
           scanners: vuln

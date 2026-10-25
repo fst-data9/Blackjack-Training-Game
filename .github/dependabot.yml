@@ -47,3 +47,19 @@ updates:
       day: monday
       time: "03:15"
       timezone: Etc/UTC
+
+  - package-ecosystem: docker
+    directory: /deploy/postgres
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
+
+  - package-ecosystem: docker
+    directory: /deploy/caddy
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
