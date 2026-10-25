@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: docker.io/library/postgres:16
+    image: docker.io/library/postgres:16.15-bookworm
     container_name: blackjack-postgres
     restart: unless-stopped
     environment:
@@ -52,7 +52,7 @@ services:
     build: *backend-build
     env_file:
       - ./backend/.env.migrations
-    command: ["npm", "run", "db:prepare"]
+    command: ["sh", "-c", "node migrate.js && node provision-db-role.js"]
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777

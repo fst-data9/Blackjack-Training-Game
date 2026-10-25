@@ -1,0 +1,49 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
+
+  - package-ecosystem: docker
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
+
+  - package-ecosystem: docker
+    directory: /deploy/staging
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
+
+  - package-ecosystem: docker
+    directory: /deploy/production
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
+
+  - package-ecosystem: github-actions
+    directory: /.github/workflows
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
