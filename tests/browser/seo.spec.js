@@ -82,11 +82,17 @@ for (const path of ['/learn/meet-the-table', '/glossary/soft-hand', '/charts/sof
     });
 }
 
-test('ads stay disabled and learning content survives script failure', async ({ page }) => {
+test('ads stay disabled with a public ads.txt file and learning content survives script failure', async ({ page, request }) => {
+    const sellerFile = await request.get('/ads.txt');
+    expect(sellerFile.status()).toBe(200);
+    expect(sellerFile.headers()['content-type']).toMatch(/^text\/plain\b/);
+    expect(await sellerFile.text()).toBe('google.com, pub-8578826503018521, DIRECT, f08c47fec0942fa0\n');
+    expect((await (await request.get('/adsense-config')).json()).enabled).toBe(false);
     let adRequests = 0;
     page.on('request', request => { if (/googlesyndication|doubleclick/.test(request.url())) adRequests++; });
     await page.route('**/learning-pages.js', route => route.abort());
     await page.goto('/learn');
+    await expect(page.locator('meta[name="google-adsense-account"]')).toHaveAttribute('content', 'ca-pub-8578826503018521');
     await expect(page.locator('#learnContent')).toContainText('Meet the table');
     await expect(page.locator('.ad-placement').first()).toBeHidden();
     expect(adRequests).toBe(0);

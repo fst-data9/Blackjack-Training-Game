@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check seo-pages.js && node --check adsense-config.js && node --check security-config.js && node --check security-log.js && node --check turnstile.js && node --check migrate.js && node --check provision-db-role.js && node migrate.js --check && node --check simulation-engine.js && node --check simulation-routes.js && node --check simulation-worker.js && node --check betting-strategies.js && node --check strategy-guide.js && node --check ../strategy-catalog.cjs && node --check ../chart-exports.js",
+    "check": "node --check server.js && node --check seo-pages.js && node --check adsense-config.js && node --check content-security-policy.js && node --check security-config.js && node --check security-log.js && node --check turnstile.js && node --check migrate.js && node --check provision-db-role.js && node migrate.js --check && node --check simulation-engine.js && node --check simulation-routes.js && node --check simulation-worker.js && node --check betting-strategies.js && node --check strategy-guide.js && node --check ../strategy-catalog.cjs && node --check ../chart-exports.js",
     "migrate": "node migrate.js",
     "migrate:check": "node migrate.js --check",
     "db:provision": "node provision-db-role.js",

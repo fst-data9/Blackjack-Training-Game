@@ -8,7 +8,7 @@ RUN npm --prefix backend ci
 
 # Copy the API and the static website it serves
 COPY backend ./backend
-COPY strategy-catalog.cjs chart-exports.js simulation.js simulation.css index.html blackjack-game.js auth.js site-nav.js learning-pages.js learning-pages.css learning-content.cjs adsense.js strategy-charts.js robots.txt sitemap.xml ./
+COPY strategy-catalog.cjs chart-exports.js simulation.js simulation.css index.html blackjack-game.js auth.js site-nav.js learning-pages.js learning-pages.css learning-content.cjs consent.js adsense.js ads.txt strategy-charts.js robots.txt sitemap.xml ./
 COPY images ./images
 COPY database ./database
 COPY scripts/verify-security.mjs ./scripts/verify-security.mjs
