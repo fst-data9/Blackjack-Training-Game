@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: docker.io/library/postgres:16.15-bookworm
+    image: docker.io/library/postgres:16.15-trixie
     container_name: blackjack-postgres
     restart: unless-stopped
     environment:

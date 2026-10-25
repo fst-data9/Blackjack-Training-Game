@@ -1,6 +1,6 @@
 services:
   caddy:
-    image: docker.io/library/caddy:2.11.4-alpine
+    image: docker.io/library/caddy:2.11.7-alpine
     container_name: blackjack-caddy
     profiles: ["staging"]
     restart: unless-stopped
