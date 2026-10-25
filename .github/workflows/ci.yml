@@ -106,7 +106,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16.15-trixie
+        image: postgres:16.15-alpine3.24
         env:
           POSTGRES_USER: blackjack
           POSTGRES_PASSWORD: integration-password
@@ -186,7 +186,7 @@ jobs:
     runs-on: ubuntu-24.04
     services:
       postgres:
-        image: postgres:16.15-trixie
+        image: postgres:16.15-alpine3.24
         env:
           POSTGRES_USER: blackjack_test
           POSTGRES_PASSWORD: backup-integration-password

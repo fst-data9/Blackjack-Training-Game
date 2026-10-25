@@ -48,7 +48,7 @@ jobs:
               docker build --pull -f backend/Dockerfile -t blackjack-security-scan:api .
               echo "SCAN_IMAGE=blackjack-security-scan:api" >> "$GITHUB_ENV"
               ;;
-            postgres) echo "SCAN_IMAGE=postgres:16.15-trixie" >> "$GITHUB_ENV" ;;
+            postgres) echo "SCAN_IMAGE=postgres:16.15-alpine3.24" >> "$GITHUB_ENV" ;;
             caddy) echo "SCAN_IMAGE=caddy:2.11.7-alpine" >> "$GITHUB_ENV" ;;
           esac
       - name: Scan image for high and critical vulnerabilities
