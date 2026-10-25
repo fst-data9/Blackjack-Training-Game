@@ -55,7 +55,7 @@ test('double, surrender, soft 17, custom decisions and legal fallbacks', () => {
 test('split aces receive one card each, cannot hit or re-split, and 21 pays ordinary winnings', () => {
   const aces = round([11, 9, 11, 8, 10, 5, 5], { overrides: { 'pair:11:9': 'split', 'hard:16:9': 'hit' } });
   assert.equal(aces.balance, 100000); assert.equal(aces.outcomes.win, 1); assert.equal(aces.outcomes.lose, 1); assert.equal(aces.outcomes.blackjack, 0);
-  assert.equal(aces.wagered, 40000);
+  assert.equal(aces.wagered, 2000);
   const split = round([8, 6, 8, 10, 8, 8, 8, 8, 8, 8, 10]);
   assert.equal(split.outcomes.win, 4); assert.equal(split.wagered, 4000);
 });
