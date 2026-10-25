@@ -32,7 +32,7 @@ echo "Updating $expected_branch..."
 git pull --ff-only origin "$expected_branch"
 
 echo "Building the API image..."
-"${compose[@]}" build api migrate
+"${compose[@]}" build api migrate postgres caddy
 
 echo "Running database migrations..."
 "${compose[@]}" run --rm migrate
