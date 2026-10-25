@@ -11,6 +11,7 @@
             <label><input id="chartDouble" type="checkbox" checked> Can afford double / split</label>
             <label><input id="chartSurrender" type="checkbox" checked> Surrender available</label>
         </div>
+        <div class="export-controls" aria-label="Download current strategy chart"><button type="button" id="chartExportCSV">Chart CSV</button><button type="button" id="chartExportPNG">Chart PNG</button><button type="button" id="chartExportSVG">Chart SVG</button></div><p id="chartExportStatus" role="status"></p>
         <p class="chart-legend">H = Hit · S = Stand · D = Double · P = Split · R = Surrender</p>
         <div class="chart-scroll" tabindex="0" role="region" aria-label="Strategy chart; scroll horizontally on smaller screens"><table class="strategy-table"><caption>Choose a cell to explore a move</caption><thead></thead><tbody></tbody></table></div>
         <div id="chartDetail" class="learning-card" role="status" aria-live="polite">Choose any cell to see the recommended action.</div>
@@ -34,7 +35,9 @@
         }
         return hardStrategy(value, dealer, afford.checked, surrender.checked);
     }
+    let chartRows = [];
     function render() {
+        chartRows = [];
         const kind = type.value;
         const rows = kind === "pair" ? [11, 10, 9, 8, 7, 6, 5, 4, 3, 2] : kind === "soft" ? [20, 19, 18, 17, 16, 15, 14, 13] : [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
         root.querySelector("thead").innerHTML = '<tr><th scope="col">Your hand</th>' + upcards.map(v => `<th scope="col">${v === 11 ? "A" : v}</th>`).join("") + '</tr>';
@@ -47,8 +50,10 @@
             const handLabel = kind === "pair" ? `${value === 11 ? "A" : value}, ${value === 11 ? "A" : value}` : kind === "soft" ? `A, ${value - 11} (${value})` : String(value);
             heading.textContent = handLabel;
             row.append(heading);
+            const exported = [handLabel];
             for (const dealer of upcards) {
                 const action = move(kind, value, dealer);
+                exported.push(action);
                 const cell = document.createElement("td");
                 const button = document.createElement("button");
                 button.type = "button";
@@ -65,11 +70,36 @@
                 cell.append(button);
                 row.append(cell);
             }
+            chartRows.push(exported);
             body.append(row);
         }
         detail.textContent = "Choose any cell to see the recommended action.";
     }
     [type, afford, surrender].forEach(control => control.addEventListener("change", render));
+    const exporter = window.BlackjackExports;
+    for (const format of ['csv', 'png', 'svg']) {
+        const button = document.getElementById('chartExport' + format.toUpperCase());
+        button.addEventListener('click', () => exporter.handle(button, document.getElementById('chartExportStatus'), () => {
+            const title = `Blackjack basic strategy · ${type.options[type.selectedIndex].text}`;
+            const settings = `Double / split affordable: ${afford.checked ? 'yes' : 'no'} · Surrender: ${surrender.checked ? 'yes' : 'no'}`;
+            const rules = 'Trainer S17 · playable split aces · four hands · fixed recommendations, not deck-specific';
+            if (format === 'csv') {
+                const rows = [['Chart', title], ['Settings', settings], ['Rules', rules], ['Your hand', ...upcards.map(value => value === 11 ? 'A' : value)], ...chartRows];
+                exporter.download(new Blob([exporter.csv(rows)], { type: 'text/csv;charset=utf-8' }), `blackjack-strategy-${type.value}.csv`);
+                return;
+            }
+            const chart = exporter.scene(title, [settings, rules, 'H = Hit · S = Stand · D = Double · P = Split · R = Surrender'], 230 + (chartRows.length + 1) * 36);
+            const cells = [['Your hand', ...upcards.map(value => value === 11 ? 'A' : value)], ...chartRows];
+            const colors = { hit: '#b8ddca', stand: '#efb5aa', double: '#b6d5f5', split: '#ddc4ef', surrender: '#f2d790' };
+            cells.forEach((row, i) => row.forEach((value, j) => {
+                const x = 40 + j * 102, y = 165 + i * 36;
+                chart.rect(x, y, 100, 34, i && j ? colors[value] : '#d5e2db');
+                chart.text(x + 50, y + 24, i && j ? { hit: 'H', stand: 'S', double: 'D', split: 'P', surrender: 'R' }[value] : value, 16, '#173d2d', 'middle');
+            }));
+            chart.text(40, chart.height - 20, 'Opening-hand recommendations. Pair decisions take priority; split hands cannot surrender.', 16);
+            return exporter.saveChart(chart, format, `blackjack-strategy-${type.value}`);
+        }));
+    }
     const initialType = location.pathname.split("/")[2];
     if (["hard", "soft", "pair"].includes(initialType)) type.value = initialType;
     render();

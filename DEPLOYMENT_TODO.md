@@ -148,7 +148,7 @@ Verify the public header after deployment. See
 - [x] Prepare disabled manual learning-content ad slots and consent-gated loader; no live ads activated.
 - [ ] Obtain publisher/display-unit IDs and confirm Google site review status.
 - [ ] Publish accurate privacy disclosures, choose/configure a certified CMP, complete CSP/ads.txt integration and consent/browser verification before activation. See `docs/adsense.md`.
-- [ ] Review and deploy learning routes; verify public URLs after authorized deployment.
+- [x] Review and deploy learning routes; verify public URLs after authorized deployment. Staging and production deployment and public smoke checks passed on 2026-10-11 via PRs #52/#53.
 
 Local validation: backend checks and security tests passed; 70 desktop/mobile
 browser tests passed, followed by 22 updated SEO checks covering all 31 topics
@@ -158,3 +158,43 @@ changes). Google approval, live ad delivery, CMP and deployed URLs are unverifie
 AdSense follow-up: owner supplied publisher ID and selected Google’s CMP.
 Verification meta tag prepared locally; production publication and Google
 verification/review remain pending. Display ad-unit ID is still needed.
+
+Deployment evidence (2026-10-11): PR #52 merged to dev at `ea1a4c5`;
+staging workflow `38101312332` succeeded. PR #53 merged to main at
+`342de0b`; production workflow `38101432599` succeeded after all required
+checks. HTTPS checks verified all 35 sitemap pages, canonical metadata,
+initial topic content, the publisher verification meta tag, frontend assets,
+disabled live ads and healthy API on both hosts; staging noindex was verified.
+Production desktop/mobile Chromium smoke checks passed with data requests
+mocked: active-round preservation, topic navigation, chart selection,
+viewport fit, no JavaScript errors and no ad requests. Google verification
+and approval have not been performed by this chat.
+
+## Strategy simulation page (2026-10-26)
+
+- [x] Implement `/simulation` locally with flat/Martingale betting, custom hard/soft/pair decisions, finite bankroll/table limits, 1k/10k/100k-round server runs and profit/loss/outcome charts.
+- [x] Add bounded worker execution, per-IP admission limits, server-generated seeds/results and summary-only storage in `005_simulation_runs.sql`; no individual simulated hands enter the hands table.
+- [x] Add deterministic engine/strategy-parity/API tests, desktop/mobile browser scenarios, CI checks and migration/role test coverage.
+- [ ] Execute the migration and restricted-role integration suite against an isolated PostgreSQL 16 instance (no local test server or test administrator URL available in this session).
+- [ ] Review and deploy through the authorized release process; run migration and role provisioning before enabling simulations, then verify persisted summaries on staging.
+
+Local validation: backend syntax/migration-file checks, security tests, existing
+51 deterministic gameplay scenarios plus 1,000 seeded rounds, and eight new
+server engine/worker/API tests passed. Database writes in the new API tests are
+mocked; this does not verify PostgreSQL persistence. Browser verification covers
+both desktop and mobile Chromium. No deployment or changes to real databases
+were performed. Run history, saved strategy retrieval and summary retention
+scheduling remain future work.
+
+### Strategy presets, guide and downloads (2026-10-26)
+
+- [x] Research and implement Paroli, D’Alembert and Fibonacci alongside flat/Martingale bets; add the original Wave/Pulse betting experiments and basic/mimic/never-bust/Chase 20/Split party playing presets.
+- [x] Add a server-rendered Strategies overview and 12 individual guide URLs with rules, examples, pros/cons, research links and explicit original-experiment labels.
+- [x] Add browser-local JSON/CSV result downloads and PNG/SVG exports for both simulation charts; add CSV/PNG/SVG downloads for the selected basic-strategy table.
+- [x] Validate documented betting sequences, caps, pushes, preset combinations and download content. All 11 engine/worker/API tests and the full 92 desktop/mobile browser tests passed; backend checks and `git diff --check` passed. PNG exports and the mobile guide were visually inspected.
+
+Downloads preserve the completed run snapshot, units and settings, even after
+form edits. Engine version is now 2. No additional migration is required by the
+preset/export extension; the initial simulation migration and PostgreSQL
+integration verification above remain prerequisites for release. No deployment
+or real-database operations were performed.

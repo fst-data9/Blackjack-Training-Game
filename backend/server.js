@@ -1,4 +1,5 @@
 import express from "express";
+import { registerSimulationRoutes } from "./simulation-routes.js";
 import { readAdSenseConfig } from "./adsense-config.js";
 import { registerSeoRoutes } from "./seo-pages.js";
 import cors from "cors";
@@ -772,6 +773,8 @@ app.get("/api/users/me/stats", authenticateOptional, requireUser, async (req, re
   }
 });
 
+registerSimulationRoutes(app, { pool, authenticateOptional });
+
 app.use("/api", (req, res) => {
   res.status(404).json({ error: "API route not found" });
 });
@@ -781,9 +784,11 @@ app.use("/api", (req, res) => {
 const frontendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 registerSeoRoutes(app, frontendRoot);
 app.get("/", (req, res) => res.sendFile(path.join(frontendRoot, "index.html")));
+for (const asset of ["simulation.js", "simulation.css", "chart-exports.js"]) app.get(`/${asset}`, (req, res) => res.sendFile(path.join(frontendRoot, asset)));
 app.get("/blackjack-game.js", (req, res) => res.sendFile(path.join(frontendRoot, "blackjack-game.js")));
 app.get("/auth.js", (req, res) => res.sendFile(path.join(frontendRoot, "auth.js")));
 app.get("/site-nav.js", (req, res) => res.sendFile(path.join(frontendRoot, "site-nav.js")));
+app.get("/strategy-catalog.cjs", (req, res) => res.type("application/javascript").sendFile(path.join(frontendRoot, "strategy-catalog.cjs")));
 app.get("/learning-content.cjs", (req, res) => res.type("application/javascript").sendFile(path.join(frontendRoot, "learning-content.cjs")));
 app.get("/adsense.js", (req, res) => res.sendFile(path.join(frontendRoot, "adsense.js")));
 app.get("/adsense-config", (req, res) => res.json(adSenseConfig));

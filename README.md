@@ -190,3 +190,95 @@ terms; inclusion in the sitemap does not guarantee indexing.
 AdSense placements and a consent-gated loader are prepared but live serving is
 blocked pending account review, publisher IDs, privacy disclosures and certified
 CMP integration. See [AdSense preparation](docs/adsense.md).
+
+## Strategy simulations
+
+Open **Simulation** (`/simulation`) to choose a betting and playing preset, edit
+hand decisions for hard/soft totals and pairs, and run 1,000, 10,000 or 100,000
+rounds. A round is one initial deal and may resolve multiple split hands. Runs
+use an independent bankroll and never affect Practice statistics. Anonymous
+visitors can run simulations; signed-in runs are associated with their account.
+
+The server uses a six-deck shoe, the trainer's strategy recommendations and
+settlements, S17, late surrender, doubles after splitting, and up to four hands
+including playable split aces. Half-bet payouts round down to whole dollars,
+matching Practice. Unavailable custom actions fall back to the selected legal playing preset.
+Martingale uses the whole round's net result (including insurance and splits):
+double after loss, reset after profit, unchanged after break-even. Opening bets
+are capped at the chosen table limit; stop when the bankroll cannot fund the
+next required bet. Splits/doubles may increase total exposure above that limit.
+
+`POST /api/simulations` accepts `rounds`, `bankroll`, `baseBet`, `tableLimit`,
+`betting` (a preset ID), `playing` (a preset ID, default `basic`),
+`insurance` (boolean), and `overrides` (for
+example `{"hard:16:10":"stand"}`). Monetary API values are integer cents in
+whole-dollar multiples. Amounts range from $1 to $1,000,000. Overrides use
+`hard:4..20`, `soft:12..20`, or `pair:2..11`, followed by dealer value `2..11`;
+11 means ace. Pair overrides precede total overrides. Actions are `hit`, `stand`,
+`double`, `split` (pairs only), and `surrender`.
+
+CPU work runs in worker threads: at most two active runs per API process, no
+queue, three accepted runs per IP per minute, and a 20-second worker deadline.
+Busy responses use 503, rate limits use 429, both with Retry-After. Limits are
+per process and reset on restart; a multi-instance deployment needs shared
+admission controls. Existing API Origin, JSON size and request limits apply.
+
+Apply migration `005_simulation_runs.sql` and rerun role provisioning through
+`db:prepare` before using the endpoint. One row stores the server-generated seed,
+engine version, settings, aggregate outcomes and at most 502 sampled chart points.
+No individual hands/cards/decisions are persisted. Results are returned only after
+the summary is saved; database failures return an error. Run history/retrieval,
+strategy persistence across reloads and retention scheduling are not implemented.
+The chart samples can omit peaks; maximum drawdown uses every round boundary.
+A single run is not an estimate of expected return or a profit guarantee.
+
+Run `npm run test:simulation --prefix backend` for deterministic engine, browser
+strategy parity, worker, and API tests (database writes are mocked in these API
+tests). `npm run test:database --prefix backend` also checks migration/role access
+against an explicitly configured isolated PostgreSQL instance. Browser tests cover
+strategy editing, charts, early stopping, error recovery and navigation.
+
+### Strategy guide and downloads
+
+The **Strategies** page (`/strategies`) and individual `/strategies/<id>` pages
+explain each preset with rules, examples, pros/cons and research links. Their
+content is server-rendered and readable without JavaScript. The shared catalog
+in `strategy-catalog.cjs` supplies the guide, selectors and server allowlists.
+
+Betting IDs: `flat`, `martingale`, `paroli` (three profitable rounds per cycle),
+`dalembert`, `fibonacci` (starts at the second 1), `wave`, and `pulse`.
+Playing IDs: `basic`, `mimic`, `never-bust`, `chase20`, and `split-party`.
+Wave, Pulse, Chase 20 and Split party are original experiments. The guide labels
+known poor playing strategies explicitly. Custom decisions take priority over
+presets; changing a preset preserves the overrides. Reset restores basic play
+and clears overrides, while retaining the selected betting system.
+
+All progression decisions use total round net. Break-even pauses established
+progressions; Wave/Pulse advance each round. Every opening wager is capped.
+Martingale/D’Alembert update from the capped wager. Fibonacci holds at the first
+sequence entry reaching the cap, so no unbounded progression debt accumulates.
+These simulator adaptations are specified in the guide. Engine version 2 records
+the new playing-preset behavior; no schema change is needed for these settings.
+
+Simulation results download as JSON (full response plus units/rule notes) or CSV
+(section/metric/round/value/unit rows, including settings, overrides, outcomes and
+sampled profit points). Money in both data formats is integer USD cents. Downloads
+use the completed run snapshot even if form settings subsequently change. The
+profit and round-outcome charts each export as standalone SVG or 2400-pixel-wide
+PNG with settings, run ID, seed, engine version and chart caveats.
+
+The **Charts** page exports its selected strategy table as CSV, SVG or PNG,
+including the current hand type, double/split affordability and surrender toggle.
+All files are generated locally in the browser; exports make no additional API
+requests and do not save simulated hands. No new download dependencies or CSP
+exceptions are required. PNG uses canvas drawing; SVG contains self-contained
+shapes, labels and colors, without scripts or external images.
+
+Research reviewed 26 October 2026: Wizard of Odds on
+[betting systems](https://wizardofodds.com/gambling/betting-systems/),
+[anti-Martingale](https://wizardofodds.com/gambling/anti-martingale/),
+[Fibonacci](https://wizardofodds.com/gambling/fibonacci/) and
+[blackjack basics](https://wizardofodds.com/games/blackjack/basics/), plus
+Crane and Shafer’s [Risk is random](https://probabilityandfinance.com/articles/57.pdf).
+Source analyses use their own game rules; the guide does not reuse their
+numerical house-edge estimates as predictions for this trainer.

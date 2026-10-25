@@ -34,7 +34,7 @@ document.getElementById("startTrainingBtn")?.addEventListener("click", () => {
 });
 
 const initialPage = location.pathname.split("/")[1];
-if (["learn", "glossary", "charts"].includes(initialPage)) showSitePage(initialPage);
+if (["learn", "glossary", "charts", "simulation", "strategies"].includes(initialPage)) showSitePage(initialPage);
 
 // Keep an active training round while giving each public view a crawlable URL.
 async function navigatePublicPage(path, push = true) {
@@ -60,6 +60,7 @@ async function navigatePublicPage(path, push = true) {
             document.getElementById("chartType").value = path.split("/")[2];
             document.getElementById("chartType").dispatchEvent(new Event("change"));
         }
+        if (section === "strategies") document.getElementById("strategiesContent").innerHTML = html.getElementById("strategiesContent").innerHTML;
         showSitePage(section);
         window.dispatchEvent(new Event("publicpagechange"));
     } catch {
@@ -68,7 +69,7 @@ async function navigatePublicPage(path, push = true) {
 }
 document.addEventListener("click", event => {
     const link = event.target.closest('a');
-    if (!link || !/^\/(?:$|(?:learn|glossary|charts)(?:\/[a-z0-9-]+)?$)/.test(link.getAttribute("href") || "")) return;
+    if (!link || !/^\/(?:$|(?:learn|glossary|charts|simulation|strategies)(?:\/[a-z0-9-]+)?$)/.test(link.getAttribute("href") || "")) return;
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     navigatePublicPage(link.getAttribute("href"));

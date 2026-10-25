@@ -1170,6 +1170,7 @@
     <!-- Cloudflare Web Analytics -->
     <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6211a02f59cb43ce88b3a2e96b7572fa"}'></script>
     <!-- End Cloudflare Web Analytics -->
+    <link rel="stylesheet" href="/simulation.css">
 </head>
 
 <body>
@@ -1182,6 +1183,8 @@
             <a href="/learn" data-placeholder-page="learn"><span aria-hidden="true">♣</span> Learn</a>
             <a href="/glossary" data-placeholder-page="glossary"><span aria-hidden="true">▤</span> Glossary</a>
             <a href="/charts" data-placeholder-page="charts"><span aria-hidden="true">▦</span> Charts</a>
+            <a href="/simulation" data-placeholder-page="simulation"><span aria-hidden="true">▥</span> Simulation</a>
+            <a href="/strategies" data-placeholder-page="strategies">Strategies</a>
             <button type="button" data-placeholder-page="share"><span aria-hidden="true">↗</span> Share</button>
         </div>
         <div class="account-actions">
@@ -1366,6 +1369,72 @@
             <h1 id="chartsHeading" tabindex="-1">Charts</h1>
             <div id="chartsContent"></div>
         </section>
+        <section class="placeholder-page simulation-page" data-placeholder-content="strategies" hidden aria-labelledby="strategiesHeading">
+            <h1 id="strategiesHeading" tabindex="-1">Strategies</h1>
+            <div id="strategiesContent"></div>
+        </section>
+        <section class="placeholder-page simulation-page" data-placeholder-content="simulation" hidden aria-labelledby="simulationHeading">
+            <h1 id="simulationHeading" tabindex="-1">Simulation</h1>
+            <p>Choose how to bet, build your own hand strategy, and see how a simulated bankroll changes over thousands of rounds. No account required.</p>
+            <form id="simulationForm">
+                <fieldset id="simSettings">
+                    <legend>1. Set your bankroll and bets</legend>
+                    <div class="sim-grid">
+                        <label>Rounds<select id="simRounds"><option value="1000">1,000</option><option value="10000">10,000</option><option value="100000">100,000</option></select></label>
+                        <label>Betting system<select id="simBetting"></select></label>
+                        <label>Playing strategy<select id="simPlaying"></select></label>
+                        <label>Starting bankroll ($)<input id="simBankroll" type="number" min="1" max="1000000" step="1" value="10000" required></label>
+                        <label>Base bet ($)<input id="simBaseBet" type="number" min="1" max="1000000" step="1" value="10" required></label>
+                        <label>Table limit ($)<input id="simTableLimit" type="number" min="1" max="1000000" step="1" value="1000" required></label>
+                    </div>
+                    <p id="simBettingDescription"></p><p id="simPlayingDescription"></p>
+                    <p><a href="/strategies">Strategy guide: rules, examples, pros and cons</a>. Bets are capped at the table limit. A run stops when the next bet is unaffordable.</p>
+                    <details>
+                        <summary>2. Customize hand decisions</summary>
+                        <p>Start with your selected playing strategy, then override specific hands against a dealer upcard. Pair overrides take priority over totals. Overrides apply whenever that hand occurs, including after a hit. Unavailable actions fall back to the selected playing strategy.</p>
+                        <div class="sim-grid">
+                            <label>Hand type<select id="simHandType"><option value="hard">Hard total</option><option value="soft">Soft total</option><option value="pair">Pair</option></select></label>
+                            <label>Your hand<select id="simHand"></select></label>
+                            <label>Dealer upcard<select id="simDealer"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option value="11">Ace</option></select></label>
+                            <label>Your action<select id="simAction"><option value="">Use playing preset</option><option value="hit">Hit</option><option value="stand">Stand</option><option value="double">Double</option><option value="split">Split</option><option value="surrender">Surrender</option></select></label>
+                        </div>
+                        <button id="simSaveAction" type="button">Save decision</button><button id="simResetStrategy" type="button">Reset to basic strategy</button>
+                        <p id="simOverrideCount" role="status"></p><ul id="simOverrides"></ul>
+                    </details>
+                    <p><label><input type="checkbox" id="simInsurance"> Take insurance whenever affordable</label></p>
+                    <details><summary>Rules and how to read the results</summary>
+                        <p>Six decks, reshuffled between rounds with 1–1.5 decks left. Dealer stands on soft 17 and checks for blackjack before player actions. Blackjack pays 3:2; other wins pay 1:1. Up to four split hands, doubling after splits, and continued play after splitting aces. Split 21 is not a natural blackjack. Late surrender applies only to the original two-card hand.</p>
+                        <p>Amounts are whole dollars. Half-bet payouts and insurance round down to the nearest dollar, matching Practice. The table limit caps opening bets; splits and doubles can increase total exposure. A round is one opening deal and can resolve several split hands.</p>
+                        <p>Charts show sampled cumulative profit/loss and counts of profitable, losing and break-even rounds. Maximum drawdown uses every completed round, measured from the previous bankroll peak. One random run is an illustration, not an expected return or a guarantee of future profit. Betting progressions do not remove the house edge.</p>
+                        <p>Only the run’s settings, seed, summary and up to 502 chart points are saved on the server. Individual hands are discarded. Signed-in runs are associated with your account; anonymous runs have no account association. Practice statistics are separate.</p>
+                    </details>
+                    <button type="submit" id="simRun">Run simulation</button>
+                </fieldset>
+            </form>
+            <p id="simulationStatus" role="status" aria-live="polite"></p>
+            <section id="simulationResults" hidden aria-labelledby="simResultsHeading">
+                <h2 id="simResultsHeading" tabindex="-1">Simulation results</h2>
+                <p id="simRunDetails"></p>
+                <dl class="sim-metrics">
+                    <div><dt>Net profit / loss</dt><dd id="simProfit"></dd></div>
+                    <div><dt>Final bankroll</dt><dd id="simFinalBankroll"></dd></div>
+                    <div><dt>Maximum drawdown</dt><dd id="simDrawdown"></dd></div>
+                    <div><dt>Total wagered</dt><dd id="simWagered"></dd></div>
+                    <div><dt>Rounds completed</dt><dd id="simCompleted"></dd></div>
+                </dl>
+                <p id="simHandsPlayed"></p>
+                <h3>Profit / loss over time</h3>
+                <svg id="simProfitChart" viewBox="0 0 700 270" role="img" aria-label="Cumulative profit or loss by round"></svg>
+                <p>Sampled at up to 502 round boundaries; peaks and troughs between samples may be omitted.</p>
+                <h3>Round outcomes</h3><div id="simOutcomeChart"></div>
+                <p id="simRunId"></p>
+                <div class="export-controls" aria-label="Download simulation results">
+                    <button type="button" id="simExportJSON">Results JSON</button><button type="button" id="simExportCSV">Results CSV</button>
+                    <button type="button" id="simProfitPNG">Profit chart PNG</button><button type="button" id="simProfitSVG">Profit chart SVG</button>
+                    <button type="button" id="simOutcomesPNG">Outcomes chart PNG</button><button type="button" id="simOutcomesSVG">Outcomes chart SVG</button>
+                </div><p id="simExportStatus" role="status"></p>
+            </section>
+        </section>
         <section class="placeholder-page" data-placeholder-content="share" hidden>
             <h1>Share</h1>
             <p>Shareable training summaries and progress cards will be available here soon.</p>
@@ -1429,7 +1498,10 @@
     <script src="site-nav.js"></script>
     <script src="learning-content.cjs"></script>
     <script src="learning-pages.js"></script>
+    <script src="/strategy-catalog.cjs"></script>
+    <script src="/chart-exports.js"></script>
     <script src="strategy-charts.js"></script>
+    <script src="/simulation.js"></script>
 
     <footer class="credits">
         <p><a href="/">Practice blackjack</a> · <a href="/learn">Learn blackjack</a> · <a href="/glossary">Blackjack glossary</a> · <a href="/charts">Basic strategy charts</a></p>

@@ -32,7 +32,7 @@ test("analytics script and reporting endpoint are allowed by CSP", async ({ page
     expect(violations.filter((uri) => uri.includes("cloudflareinsights.com"))).toEqual([]);
 });
 
-for (const path of ["/", "/learn", "/glossary", "/charts"]) {
+for (const path of ["/", "/learn", "/glossary", "/charts", "/simulation", "/strategies"]) {
     test(`public SEO response ${path} works without JavaScript`, async ({ browser, request }) => {
         const context = await browser.newContext({ javaScriptEnabled: false });
         const page = await context.newPage();

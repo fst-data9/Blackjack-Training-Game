@@ -9,7 +9,7 @@ dotenv.config({ path: fileURLToPath(new URL(".env.migrations", import.meta.url))
 // introduces a new application table, then re-run db:prepare on release.
 const applicationTables = [
   "sessions", "hands", "users", "oauth_identities", "auth_tokens",
-  "session_stats", "auth_rate_limits",
+  "session_stats", "auth_rate_limits", "simulation_runs",
 ];
 
 export async function provisionDatabaseRole(client, { username, password }) {
