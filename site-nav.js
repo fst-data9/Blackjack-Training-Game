@@ -34,7 +34,7 @@ document.getElementById("startTrainingBtn")?.addEventListener("click", () => {
 });
 
 const initialPage = location.pathname.split("/")[1];
-if (["learn", "glossary", "charts", "privacy"].includes(initialPage)) showSitePage(initialPage);
+if (["learn", "glossary", "charts", "privacy", "simulation", "strategies"].includes(initialPage)) showSitePage(initialPage);
 
 // Keep an active training round while giving each public view a crawlable URL.
 async function navigatePublicPage(path, push = true) {
@@ -70,6 +70,7 @@ async function navigatePublicPage(path, push = true) {
             document.getElementById("chartType").value = pagePath.split("/")[2];
             document.getElementById("chartType").dispatchEvent(new Event("change"));
         }
+        if (section === "strategies") document.getElementById("strategiesContent").innerHTML = html.getElementById("strategiesContent").innerHTML;
         showSitePage(section);
         if (url.hash) document.getElementById(url.hash.slice(1))?.scrollIntoView();
         window.dispatchEvent(new Event("publicpagechange"));
@@ -80,7 +81,7 @@ async function navigatePublicPage(path, push = true) {
 document.addEventListener("click", event => {
     if (event.defaultPrevented) return;
     const link = event.target.closest('a');
-    if (!link || !/^\/(?:$|privacy(?:#cookie-settings)?$|(?:learn|glossary|charts)(?:\/[a-z0-9-]+)?$)/.test(link.getAttribute("href") || "")) return;
+    if (!link || !/^\/(?:$|privacy(?:#cookie-settings)?$|(?:learn|glossary|charts|simulation|strategies)(?:\/[a-z0-9-]+)?$)/.test(link.getAttribute("href") || "")) return;
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     navigatePublicPage(link.getAttribute("href"));
