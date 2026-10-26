@@ -1,0 +1,35 @@
+.counting-page { max-width: 1180px; margin: auto; padding: 24px; }
+.count-eyebrow { color: #8de2bd; font-size: .78rem; letter-spacing: .14em; font-weight: 700; }
+.counting-page h1 { font-size: clamp(2rem, 5vw, 3.5rem); margin: 8px 0; }
+.count-lead { max-width: 680px; color: #bbc9d5; line-height: 1.7; }
+.count-layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 22px; margin: 28px 0; }
+.count-panel { background: #172433; border: 1px solid #344555; border-radius: 14px; padding: 22px; margin-bottom: 20px; line-height: 1.65; color: #d5dfe7; }
+.count-panel h2 { margin-top: 0; font-size: 1.2rem; }
+.count-panel label { display: block; margin: 14px 0 6px; }
+.count-panel select { width: 100%; padding: 10px; background: #0e1925; color: #fff; border: 1px solid #657785; border-radius: 6px; }
+.counting-page summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
+.counting-page a { color: #8de2bd; }
+.count-table { background: radial-gradient(ellipse at top, #17644d, #0b302a); border: 3px solid #8f7852; border-radius: 30px; min-height: 410px; padding: 24px; text-align: center; color: #fff; }
+.count-table-top { display: flex; justify-content: space-between; gap: 12px; color: #c6decf; font-size: .85rem; }
+.count-cards { display: flex; justify-content: center; gap: 14px; min-height: 130px; align-items: center; margin: 20px 0; }
+.count-playing-card, .count-card-back { display: grid; place-content: center; width: 85px; height: 116px; border-radius: 9px; background: #fffdf5; color: #142337; font-size: 2rem; box-shadow: 0 5px 12px #0005; font-weight: 700; }
+.count-playing-card.red { color: #b72d40; }
+.count-card-back { background: repeating-linear-gradient(45deg, #193c59, #193c59 5px, #254e6c 5px, #254e6c 7px); color: #d9cba8; border: 4px solid #fffdf5; }
+.count-table button { padding: 10px 18px; margin: 6px; border-radius: 7px; background: #e3c48a; color: #18251f; border: 1px solid #f0dba9; cursor: pointer; font-weight: 700; }
+.count-table button:disabled { opacity: .5; cursor: default; }
+.count-table label { display: block; margin: 8px; }
+.count-table input { width: 110px; padding: 10px; border-radius: 6px; border: 1px solid #98b2a5; background: #fff; color: #142337; font-size: 1.1rem; }
+.count-metrics { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 16px; gap: 10px; text-align: center; }
+.count-metrics div { border: 1px solid #344555; border-radius: 10px; padding: 14px 5px; background: #172433; }
+.count-metrics strong, .count-metrics span { display: block; }
+.count-metrics strong { font-size: 1.7rem; color: #8de2bd; }
+.count-metrics span { font-size: .8rem; color: #bbc9d5; }
+.count-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.count-tag { background: #0e1925; border: 1px solid #344555; border-radius: 6px; padding: 8px 12px; text-align: center; }
+.count-tag strong { display: block; color: #8de2bd; }
+.count-lessons { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+.counting-page :focus-visible { outline: 3px solid #f0cf88; outline-offset: 4px; }
+@media(max-width: 700px) { .counting-page { padding: 16px 10px; } .count-layout, .count-lessons { grid-template-columns: 1fr; } .count-table { padding: 18px 12px; border-radius: 18px; } }
+.placeholder-page.counting-page { width: min(100% - 24px, 1180px); text-align: left; }
+.counting-page p { max-width: none; margin: 12px 0; }
+.counting-page .count-table p { text-align: center; }

@@ -282,3 +282,21 @@ Research reviewed 26 October 2026: Wizard of Odds on
 Crane and Shafer’s [Risk is random](https://probabilityandfinance.com/articles/57.pdf).
 Source analyses use their own game rules; the guide does not reuse their
 numerical house-edge estimates as predictions for this trainer.
+
+## Card counting training
+
+**Card counting** (`/counting`) offers card-tag, running-count and true-count
+arithmetic drills for Hi-Lo, KO, Red Seven, Hi-Opt I/II, Omega II, Zen and Wong
+Halves. Configure 1/2/6/8 decks, paired reveals, penetration, hints and an optional
+aces-seen side count. Answers receive immediate feedback, accuracy and streaks.
+Changing settings resets the drill; in-page navigation preserves it. No account,
+API writes or Practice bankroll changes are involved.
+
+Balanced systems start at zero; true-count drills use exact remaining cards / 52
+and truncate toward zero, stopping with at least one card left. KO and Red Seven
+also start at zero **for arithmetic practice only**; their published starting
+counts and indexes must not be applied to this practice total. Unbalanced systems
+have no true-count drill. Lessons and linked research explain these distinctions;
+this is not a full betting/index implementation or an exhaustive system catalog.
+Run `node node_modules/@playwright/test/cli.js test tests/browser/counting.spec.js`
+for desktop/mobile drill checks.

@@ -198,3 +198,16 @@ form edits. Engine version is now 2. No additional migration is required by the
 preset/export extension; the initial simulation migration and PostgreSQL
 integration verification above remain prerequisites for release. No deployment
 or real-database operations were performed.
+
+## Card counting training (2026-10-26)
+
+- [x] Add `/counting` with the existing table styling, beginner lessons, eight counting systems, tag/running/true-count drills, paired reveals, configurable shoe size/penetration, optional hints and aces-seen tracking.
+- [x] Add navigation, canonical metadata, generated sitemap inclusion, explicit asset routes and Docker image copies. Preserve Practice state and keep drill results browser-local.
+- [x] Verify desktop/mobile counting, gameplay and SEO (94 checks), then final counting scenarios including hidden hints, ace feedback and no-JavaScript lessons (10 checks). Backend checks, changed-script syntax and `git diff --check` passed; desktop/mobile screenshots inspected.
+- [ ] Review and deploy through the authorized release process.
+
+Research sources are linked on the page. Eight major systems are supported, not
+all published techniques. Unbalanced drills use a documented zero-based practice
+count, with no betting indexes; balanced true counts use exact decks remaining
+and truncation toward zero. No wager recommendations or full deviation tables
+are implemented. No database changes or deployment were performed.
