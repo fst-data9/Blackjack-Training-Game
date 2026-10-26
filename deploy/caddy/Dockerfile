@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.26.10-alpine AS caddy-build
+FROM docker.io/library/golang:1.27.3-alpine AS caddy-build
 
 RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@v0.4.7 \
     && xcaddy build v2.11.7 \
