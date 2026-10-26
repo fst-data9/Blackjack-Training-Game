@@ -8,6 +8,14 @@ updates:
       day: monday
       time: "03:15"
       timezone: Etc/UTC
+    open-pull-requests-limit: 1
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      backend-dependencies:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: docker
     directory: /backend
@@ -17,42 +25,14 @@ updates:
       day: monday
       time: "03:15"
       timezone: Etc/UTC
-
-  - package-ecosystem: docker
-    directory: /
-    target-branch: dev
-    schedule:
-      interval: weekly
-      day: monday
-      time: "03:15"
-      timezone: Etc/UTC
-
-  - package-ecosystem: docker
-    directory: /deploy/staging
-    target-branch: dev
-    schedule:
-      interval: weekly
-      day: monday
-      time: "03:15"
-      timezone: Etc/UTC
-
-  - package-ecosystem: docker
-    directory: /deploy/production
-    target-branch: dev
-    schedule:
-      interval: weekly
-      day: monday
-      time: "03:15"
-      timezone: Etc/UTC
-
-  - package-ecosystem: github-actions
-    directory: /.github/workflows
-    target-branch: dev
-    schedule:
-      interval: weekly
-      day: monday
-      time: "03:15"
-      timezone: Etc/UTC
+    open-pull-requests-limit: 1
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      backend-image:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: docker
     directory: /deploy/postgres
@@ -62,6 +42,14 @@ updates:
       day: monday
       time: "03:15"
       timezone: Etc/UTC
+    open-pull-requests-limit: 1
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      postgres-image:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: docker
     directory: /deploy/caddy
@@ -71,3 +59,25 @@ updates:
       day: monday
       time: "03:15"
       timezone: Etc/UTC
+    open-pull-requests-limit: 1
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      caddy-image:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: /.github/workflows
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: ["major", "minor", "patch"]
