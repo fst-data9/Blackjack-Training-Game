@@ -1,9 +1,6 @@
 services:
   caddy:
     image: blackjack-caddy:2.11.7
-    build:
-      context: .
-      dockerfile: deploy/caddy/Dockerfile
     container_name: blackjack-caddy
     profiles: ["production"]
     restart: unless-stopped
