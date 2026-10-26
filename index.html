@@ -1171,6 +1171,7 @@
     <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "6211a02f59cb43ce88b3a2e96b7572fa"}'></script>
     <!-- End Cloudflare Web Analytics -->
     <link rel="stylesheet" href="/simulation.css">
+    <link rel="stylesheet" href="/counting.css">
 </head>
 
 <body>
@@ -1183,6 +1184,7 @@
             <a href="/learn" data-placeholder-page="learn"><span aria-hidden="true">♣</span> Learn</a>
             <a href="/glossary" data-placeholder-page="glossary"><span aria-hidden="true">▤</span> Glossary</a>
             <a href="/charts" data-placeholder-page="charts"><span aria-hidden="true">▦</span> Charts</a>
+            <a href="/counting" data-placeholder-page="counting">Card counting</a>
             <a href="/simulation" data-placeholder-page="simulation"><span aria-hidden="true">▥</span> Simulation</a>
             <a href="/strategies" data-placeholder-page="strategies">Strategies</a>
             <button type="button" data-placeholder-page="share"><span aria-hidden="true">↗</span> Share</button>
@@ -1369,6 +1371,65 @@
             <h1 id="chartsHeading" tabindex="-1">Charts</h1>
             <div id="chartsContent"></div>
         </section>
+        <section class="placeholder-page counting-page" data-placeholder-content="counting" hidden aria-labelledby="countingHeading">
+            <p class="count-eyebrow">OBSERVE. ADD. REPEAT.</p>
+            <h1 id="countingHeading" tabindex="-1">Card counting</h1>
+            <p class="count-lead">Train your attention, one card at a time. Learn Hi-Lo first, then challenge yourself with a different system.</p>
+            <noscript><p>Enable JavaScript to use the drills. The lessons and research links below remain available.</p></noscript>
+            <div class="count-layout">
+                <aside class="count-panel">
+                    <h2>Your training setup</h2>
+                    <label for="countSystem">Counting system</label><select id="countSystem"></select>
+                    <label for="countMode">Drill</label><select id="countMode"><option value="tag">Card values · beginner</option><option value="running">Running count</option><option value="true">True count · advanced</option></select>
+                    <label for="countDecks">Shoe size</label><select id="countDecks"><option value="1">1 deck</option><option value="2">2 decks</option><option value="6" selected>6 decks</option><option value="8">8 decks</option></select>
+                    <details><summary>Advanced options</summary>
+                        <label for="countBatch">Cards per reveal</label><select id="countBatch"><option value="1">One card</option><option value="2">Two cards · cancellation</option></select>
+                        <label for="countDepth">Stop at penetration</label><select id="countDepth"><option value="0.5">50%</option><option value="0.75" selected>75%</option><option value="1">100% · deck check</option></select>
+                        <label><input id="countHints" type="checkbox" checked> Show count hints</label>
+                        <label><input id="countAces" type="checkbox"> Also track aces seen</label>
+                    </details>
+                    <p>Changing a setting starts a fresh drill. Results stay in this page only.</p>
+                </aside>
+                <div>
+                    <div class="count-table">
+                        <div class="count-table-top"><span id="countShoe">Fresh shoe</span><span id="countProgress">0 cards seen</span></div>
+                        <p id="countInstruction">Select a drill and start when ready.</p>
+                        <div id="countCards" class="count-cards" aria-label="Revealed cards"><span class="count-card-back" aria-hidden="true">♠</span></div>
+                        <p id="countHint"></p>
+                        <form id="countAnswerForm" hidden>
+                            <label for="countAnswer" id="countAnswerLabel">Card value</label><input id="countAnswer" type="number" step="0.5" required autocomplete="off">
+                            <div id="countAceField" hidden><label for="countAceAnswer">Aces seen in this shoe</label><input id="countAceAnswer" type="number" min="0" step="1"></div>
+                            <button type="submit" id="countCheck">Check answer</button>
+                        </form>
+                        <p id="countFeedback" role="status" aria-live="polite">No account needed. Your Practice game is kept separate.</p>
+                        <button id="countNext" type="button">Start drill</button>
+                        <button id="countReset" type="button">Reset drill</button>
+                    </div>
+                    <div class="count-metrics" aria-label="Drill results"><div><strong id="countAccuracy">—</strong><span>Accuracy</span></div><div><strong id="countStreak">0</strong><span>Current streak</span></div><div><strong id="countAttempts">0</strong><span>Answers checked</span></div></div>
+                </div>
+            </div>
+            <section class="count-panel count-reference"><h2 id="countSystemTitle">System reference</h2><p id="countSystemNote"></p><div id="countTags" class="count-tags"></div><p id="countStartNote"></p></section>
+            <h2>Build the skill in four steps</h2>
+            <div class="count-lessons">
+                <article class="count-panel"><span class="count-eyebrow">01 · CARD VALUES</span><h3>Start with Hi-Lo</h3><p>Assign +1 to 2–6, zero to 7–9, and −1 to tens, picture cards and aces. A positive Hi-Lo count signals a richer proportion of high cards remaining. These are counting tags, not blackjack hand values. Practise until each tag feels automatic.</p></article>
+                <article class="count-panel"><span class="count-eyebrow">02 · RUNNING COUNT</span><h3>Keep one total</h3><p>Add the tags of every exposed card to your running total. A 5 followed by a king cancels to zero in Hi-Lo. Count other players’ cards too, but never guess a hidden card. Reset at the shuffle.</p></article>
+                <article class="count-panel"><span class="count-eyebrow">03 · TRUE COUNT</span><h3>Account for the shoe</h3><p>For balanced counts, divide the running count by decks remaining. +6 with three decks left gives +2. This drill uses exact remaining cards ÷ 52 and truncates toward zero: −3.8 becomes −3. Published index conventions differ.</p></article>
+                <article class="count-panel"><span class="count-eyebrow">04 · ADVANCED PRACTICE</span><h3>Accuracy before complexity</h3><p>Hide hints, reveal pairs, then practise an ace side count. Ace-neutral systems such as Hi-Opt and Omega II track aces separately for betting adjustments. Here you practise aces seen; no betting adjustment is applied.</p></article>
+            </div>
+            <details class="count-panel"><summary>Beyond the arithmetic: systems, deviations and limitations</summary>
+                <p>Hi-Lo is a balanced level-one count. Hi-Opt I is ace-neutral; Hi-Opt II, Omega II and Zen add multi-level tags. Wong Halves uses fractional tags. KO and Red Seven are unbalanced: their totals drift across a full deck, so this trainer does not apply ordinary true-count division to them. Red Seven distinguishes red and black sevens.</p>
+                <p>These eight drills cover major families, not every published method. REKO simplifies KO’s decision rules; KISS, Mentor, Revere and Uston systems offer other tag sets. A tag table alone is not a complete betting or playing system.</p>
+                <p>Playing deviations change basic strategy at system-specific indexes. Insurance, surrender, deck count, S17/H17 and rounding conventions matter. Learn a published index set for your exact rules; do not transfer Hi-Lo thresholds to another system. This page trains counting arithmetic, not index decisions or wager sizing.</p>
+                <p>Deck estimation, penetration and bankroll risk matter alongside counting. Bet progressions do not replace an advantage calculation. Continuous shuffling disrupts the persistent shoe information counting relies on. Shuffle tracking and ace sequencing track card locations rather than just rank totals and are outside these drills. Counting does not guarantee profit.</p>
+            </details>
+            <section class="count-panel"><h2>Research and further study</h2><p>Reviewed 26 October 2026. Lessons are original summaries; consult the full sources for system-specific play.</p><ul>
+                <li><a href="https://www.blackjackapprenticeship.com/how-to-count-cards/">Blackjack Apprenticeship: counting fundamentals</a></li>
+                <li><a href="https://www.blackjackapprenticeship.com/true-count-conversion-guide/">True-count conversion and deck estimation</a></li>
+                <li><a href="https://www.qfit.com/card-counting.htm">QFIT: system tags and comparison</a></li>
+                <li><a href="https://www.qfit.com/cardcounting/Red-Seven/">Red Seven and its variations</a></li>
+                <li><a href="https://www.qfit.com/rekostrategy.htm">REKO: how simplified indexes differ</a></li>
+            </ul></section>
+        </section>
         <section class="placeholder-page simulation-page" data-placeholder-content="strategies" hidden aria-labelledby="strategiesHeading">
             <h1 id="strategiesHeading" tabindex="-1">Strategies</h1>
             <div id="strategiesContent"></div>
@@ -1538,6 +1599,7 @@
     <script src="/chart-exports.js"></script>
     <script src="strategy-charts.js"></script>
     <script src="/simulation.js"></script>
+    <script src="/counting.js"></script>
 
     <footer class="credits">
         <p><a href="/">Practice blackjack</a> · <a href="/learn">Learn blackjack</a> · <a href="/glossary">Blackjack glossary</a> · <a href="/charts">Basic strategy charts</a></p>

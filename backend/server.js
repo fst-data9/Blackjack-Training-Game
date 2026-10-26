@@ -779,7 +779,7 @@ registerSeoRoutes(app, frontendRoot);
 app.get("/", (req, res) => res.locals.adSenseNonce
   ? res.type("html").send(withScriptNonce(readFileSync(path.join(frontendRoot, "index.html"), "utf8"), res.locals.adSenseNonce))
   : res.sendFile(path.join(frontendRoot, "index.html")));
-for (const asset of ["simulation.js", "simulation.css", "chart-exports.js"]) app.get(`/${asset}`, (req, res) => res.sendFile(path.join(frontendRoot, asset)));
+for (const asset of ["simulation.js", "simulation.css", "chart-exports.js", "counting.js", "counting.css"]) app.get(`/${asset}`, (req, res) => res.sendFile(path.join(frontendRoot, asset)));
 app.get("/blackjack-game.js", (req, res) => res.sendFile(path.join(frontendRoot, "blackjack-game.js")));
 app.get("/auth.js", (req, res) => res.sendFile(path.join(frontendRoot, "auth.js")));
 app.get("/site-nav.js", (req, res) => res.sendFile(path.join(frontendRoot, "site-nav.js")));

@@ -15,6 +15,7 @@ const origin = "https://blackjack-trainer.co";
 const practiceTitle = "Free Blackjack Trainer | Practice Basic Strategy";
 const practiceDescription = "Practise blackjack basic strategy free with instant decision feedback, learning lessons, a glossary and strategy charts. No login required.";
 const pages = {
+  counting: ["Card Counting Trainer | Blackjack Trainer", "Learn card counting with eight systems, card-value drills, running counts and true-count practice.", "Card counting", "Practise counting one card at a time."],
   strategies: ["Blackjack Strategy Guide | Blackjack Trainer", "Compare blackjack betting systems and playing strategies, with rules, examples, pros, cons and research sources.", "Strategy guide", "Explore established systems and original experiments."],
   simulation: ["Blackjack Strategy Simulator | Blackjack Trainer", "Customize blackjack decisions and betting systems, then simulate up to 100,000 rounds on the server.", "Blackjack strategy simulator", "Explore flat bets, Martingale and your own hand decisions."],
   learn: ["Learn Blackjack Rules & Basic Strategy | Blackjack Trainer", "Learn blackjack rules, card values, hitting, standing, doubling, splitting and surrender. Test your decisions with a free basic strategy quiz.", "Learn blackjack", "Learn the rules and practise choosing when to hit, stand, double, split or surrender. Basic strategy improves decisions over many hands; it does not guarantee a profit."],
@@ -33,8 +34,8 @@ export function renderBreadcrumbs(page) {
   const strategy = catalog.entries.find(entry => page === `strategies/${entry.id}`);
   const crumbs = page === "privacy"
     ? [{ title: "Home", href: "/" }, { title: "Privacy policy", href: "/privacy" }]
-    : page === "simulation"
-      ? [{ title: "Home", href: "/" }, { title: "Simulation", href: "/simulation" }]
+    : ["simulation", "counting"].includes(page)
+      ? [{ title: "Home", href: "/" }, { title: page === "counting" ? "Card counting" : "Simulation", href: `/${page}` }]
       : page === "strategies" || strategy
         ? [{ title: "Home", href: "/" }, { title: "Strategies", href: "/strategies" }, ...(strategy ? [{ title: strategy.name, href: `/strategies/${strategy.id}` }] : [])]
         : content.breadcrumbs(page);
@@ -78,6 +79,7 @@ export function renderSeoPage(template, page) {
       .replace('<h1 id="strategiesHeading" tabindex="-1">Strategies</h1>', `${breadcrumbs.markup}<h1 id="strategiesHeading" tabindex="-1">${escape(heading)}</h1>`)
       .replace('<div id="strategiesContent"></div>', `<div id="strategiesContent">${renderStrategyGuide(strategy?.id)}</div>`));
   }
+  if (section === "counting") return withBreadcrumbData(shell.replace('<h1 id="countingHeading"', `${breadcrumbs.markup}<h1 id="countingHeading"`));
   if (section === "simulation") {
     return withBreadcrumbData(shell.replace('<h1 id="simulationHeading" tabindex="-1">Simulation</h1>', `${breadcrumbs.markup}<h1 id="simulationHeading" tabindex="-1">${escape(heading)}</h1>`));
   }
