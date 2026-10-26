@@ -241,6 +241,15 @@ jobs:
           printf '%s\n' "$STAGING_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/known_hosts ~/.ssh/id_ed25519
 
+      - name: Build Caddy image on the GitHub runner
+        run: docker build --pull -f deploy/caddy/Dockerfile -t blackjack-caddy:2.11.7 .
+      - name: Transfer Caddy image to staging
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_USER: ${{ secrets.STAGING_USER }}
+        run: |
+          docker save blackjack-caddy:2.11.7 | gzip -1 | ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=20 "$STAGING_USER@$STAGING_HOST" 'gunzip -c | docker load'
+
       - name: Deploy staging over SSH
         env:
           STAGING_HOST: ${{ secrets.STAGING_HOST }}
@@ -280,6 +289,15 @@ jobs:
           printf '%s\n' "$PRODUCTION_KNOWN_HOSTS" > ~/.ssh/known_hosts
           printf '%s\n' "$PRODUCTION_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/known_hosts ~/.ssh/id_ed25519
+
+      - name: Build Caddy image on the GitHub runner
+        run: docker build --pull -f deploy/caddy/Dockerfile -t blackjack-caddy:2.11.7 .
+      - name: Transfer Caddy image to production
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ secrets.PRODUCTION_USER }}
+        run: |
+          docker save blackjack-caddy:2.11.7 | gzip -1 | ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=20 "$PRODUCTION_USER@$PRODUCTION_HOST" 'gunzip -c | docker load'
 
       - name: Deploy production over SSH
         env:

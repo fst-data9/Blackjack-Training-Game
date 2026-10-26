@@ -31,8 +31,13 @@ fi
 echo "Updating $expected_branch..."
 git pull --ff-only origin "$expected_branch"
 
-echo "Building the API image..."
-"${compose[@]}" build api migrate postgres caddy
+echo "Building the API and PostgreSQL images..."
+if ! docker image inspect blackjack-caddy:2.11.7 >/dev/null 2>&1; then
+  echo "The prebuilt blackjack-caddy:2.11.7 image was not loaded before deployment." >&2
+  exit 1
+fi
+
+"${compose[@]}" build api migrate postgres
 
 echo "Running database migrations..."
 "${compose[@]}" run --rm migrate
