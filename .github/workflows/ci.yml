@@ -225,6 +225,8 @@ jobs:
       cancel-in-progress: false
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
       - name: Configure SSH
         env:
           STAGING_KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
@@ -275,6 +277,8 @@ jobs:
       cancel-in-progress: false
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
       - name: Configure SSH
         env:
           PRODUCTION_KNOWN_HOSTS: ${{ secrets.PRODUCTION_KNOWN_HOSTS }}
