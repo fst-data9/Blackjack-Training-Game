@@ -1,4 +1,4 @@
-FROM docker.io/library/postgres:16.15-alpine3.24
+FROM docker.io/library/postgres:18.4-alpine3.24
 
 # Alpine's su-exec safely drops privileges for the official entrypoint without
 # shipping the vulnerable Go-based gosu binary.
