@@ -198,3 +198,19 @@ form edits. Engine version is now 2. No additional migration is required by the
 preset/export extension; the initial simulation migration and PostgreSQL
 integration verification above remain prerequisites for release. No deployment
 or real-database operations were performed.
+
+## Weekly security investigation (2026-11-03)
+
+The November 2 scheduled run `41432599542` failed only the Caddy scan:
+CVE-2026-116587 affected go-jose v3.0.5 and v4.1.5. Production npm, API
+and PostgreSQL scans passed. Pin the upstream v3 security backport
+`0e502b87c7aa651155b11ae8e195ec33ce10230a` (no tagged v3 fix yet) and
+released v4.1.6 in the existing Caddy build. Keep HIGH/CRITICAL failures
+and unfixed-vulnerability reporting enabled.
+
+- [x] Prepare the Caddy dependency fix on an isolated task branch.
+- [ ] Verify the rebuilt image with the pull-request container scan.
+- [ ] Release through staging and production, then verify HTTPS health.
+
+Local Docker/Podman and Go are unavailable; container build/runtime validation
+must run in CI. No deployed containers or databases were changed.
