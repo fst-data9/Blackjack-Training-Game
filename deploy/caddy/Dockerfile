@@ -9,7 +9,7 @@ RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@v0.4.7 \
         --replace github.com/go-jose/go-jose/v4@v4.1.5=github.com/go-jose/go-jose/v4@v4.1.6 \
         --output /usr/bin/caddy
 
-FROM docker.io/library/caddy:2.11.7-alpine
+FROM docker.io/library/caddy:2.11.8-alpine
 
 # The upstream image includes curl for convenience, but Caddy does not need it
 # at runtime. Remove curl and libcurl to keep vulnerable, unused packages out.
